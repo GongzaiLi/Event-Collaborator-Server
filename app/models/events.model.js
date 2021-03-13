@@ -2,7 +2,7 @@ const db = require('../../config/db');
 
 
 exports.readAllEvents = async function (req) {
-    console.log('Request to get all Event from the database...');
+    console.log('Request to get all Event from the database...');//need to fix
     const queryParameters = req.query;
 
     const conn = await db.getPool().getConnection(); //CONNECTING
@@ -84,15 +84,11 @@ async function readParameter(queryParameters) {
         }
     }
 
-
     querySql += ` from ${query.from}`;
     querySql += (query.where.length) ? ` where${query.where}` : '';
     querySql += query.groupBy;
-    querySql += (query.where.sortBy) ? ` order by ${query.sortBy}` : ' order by date desc ';
+    querySql += (query.sortBy.length) ? ` order by ${query.sortBy}` : ' order by date desc ';
 
-    // } else {
-    //     querySql = 'select * from event order by date desc'; // string // can delete
-    // }
     console.log(querySql);
     return querySql;
 
@@ -100,11 +96,50 @@ async function readParameter(queryParameters) {
 
 async function filterEvents(raws, queryParameters) {
     let result = raws;
-    if (queryParameters.count) {
-        result = result.slice(0, parseInt(queryParameters.count));
-    }
+    //console.log(result.length);
     if (queryParameters.startIndex) {
-        result = result.slice(parseInt(queryParameters.startIndex));
+        result = result.filter((item, index) => index >= parseInt(queryParameters.startIndex)) //>2
     }
+    if (queryParameters.count) {
+        result = result.filter((item, index) => index < parseInt(queryParameters.count)) //10
+        //result = result.slice(0, parseInt(queryParameters.count));
+    }
+    //console.log(result.length);
     return result;
+}
+
+
+exports.createOneEvent = async function (req) {
+
+    const event = req.body;
+    //console.log(event);
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    //title description date image_filename is_online url venue capacity requires_attendance_control fee organizer_id
+
+    let sql = "insert into event (title ,description, date, image_filename, is_online, url, venue, capacity, requires_attendance_control, fee, organizer_id)";
+    let sqlValues = "VALUES ( ";
+
+    sqlValues += ` '${event.title}', `; // not null
+    sqlValues += ` '${event.description}', `; // not null
+    sqlValues += ` '${event.date}', `;// not null
+    sqlValues += (event.imageFilename) ? ` '${event.imageFilename}', ` : 'NULL, ';
+    sqlValues += ` ${event.isOnline}, `;
+    sqlValues += (event.url) ? ` '${event.url}', ` : 'NULL, ';
+    sqlValues += (event.venue) ? ` '${event.venue}', ` : 'NULL, ';
+    sqlValues += (event.capacity) ? ` ${event.capacity}, ` : 'NULL, ';
+    sqlValues += (event.requiresAttendanceControl) ? ` ${event.requiresAttendanceControl}, ` : '0, ';
+    sqlValues += (event.fee) ? ` ${event.fee}, ` : '0.00, ';
+    sqlValues += ` ${event.organizerId} )`;
+
+    console.log(sql+sqlValues);
+
+    const [rows] = await conn.query(sql+sqlValues);
+    const eventId = rows.insertId;
+
+    for (const categoryId of event.categoryIds) {
+        await conn.query("INSERT INTO event_category ( event_id, category_id) VALUES ( ? , ? )", [eventId, categoryId]);
+    }
+
+    conn.release(); // release space
+    return eventId;
 }

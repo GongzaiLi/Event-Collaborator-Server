@@ -14,9 +14,6 @@ const events = require('../controllers/events.controller');
  */
 module.exports = function (app) {
     app.route(app.rootUrl + '/events')
-        .get(events.readAllEvents); //
-
-
-
-
+        .get(events.readAllEvents) //
+        .post(events.createOneEvent);
 }
