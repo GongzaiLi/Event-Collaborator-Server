@@ -1,13 +1,20 @@
-const user = require('../models/user.server.model');
+const Users = require('../models/user.server.model');
 
-exports.list = async function(req, res) {
-    console.log('testing the using');
+exports.createOneNewUser = async function (req, res) {
+    console.log('Register as a new user.');
+
     try {
-        const result = await user.getAll();
-        res.status( 200 )
-            .send( result );
-    } catch( err ) {
-        res.status( 500 )
-            .send( `ERROR getting users ${ err }` );
+        const result = await Users.createOneNewUser(req);
+
+        if (result) {
+            res.status(201)
+                .send({userId: result.insertId});
+        } else {
+            res.status(400)
+                .send('Bad Request');
+        }
+    } catch (err) {
+        res.status(500)
+            .send(`ERROR getting users ${err}`);
     }
 }

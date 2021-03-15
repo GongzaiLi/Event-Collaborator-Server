@@ -133,11 +133,11 @@ exports.createOneEvent = async function (req) {
 
     console.log(sql+sqlValues);
 
-    const [rows] = await conn.query(sql+sqlValues);
+    const [rows] = await conn.query(sql+sqlValues); // ??????????????
     const eventId = rows.insertId;
 
     for (const categoryId of event.categoryIds) {
-        await conn.query("INSERT INTO event_category ( event_id, category_id) VALUES ( ? , ? )", [eventId, categoryId]);
+        await conn.query("INSERT INTO event_category ( event_id, category_id) VALUES ( ? , ? )", [eventId, categoryId]); // ???????????
     }
 
     conn.release(); // release space
