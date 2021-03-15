@@ -1,11 +1,10 @@
 const db = require('../../config/db');
-
+const password = require('../resources/helper/password');
 
 exports.createOneNewUser = async function (req) {
     console.log('Request to Register as a new user into the database...');
     const user = req.body;
     const conn = await db.getPool().getConnection(); //CONNECTING
-
     let userInfo = {
         email: '',
         firstName: '',
@@ -18,8 +17,10 @@ exports.createOneNewUser = async function (req) {
     userInfo.lastName = (user.lastName) ? user.lastName : null;
     userInfo.email = (user.email) ? user.email : null;
     userInfo.imageFilename = (user.imageFilename) ? user.imageFilename : null;
-    userInfo.password = (user.password) ? user.password : null;
+
+    userInfo.password = (user.password) ? await password.hashPassword(user.password) : null;
     userInfo.authToken = (user.authToken) ? user.authToken : null;
+
 
     //The firstName / lastName/ email/ password must not be an empty string.
     if (!userInfo.firstName && !userInfo.lastName && !userInfo.email && !userInfo.password) return;
@@ -31,6 +32,7 @@ exports.createOneNewUser = async function (req) {
 
     // console.log(typeof Object.values(userInfo));
     const sql = 'INSERT INTO user (email, first_name, last_name, image_filename, password) VALUES (?, ?, ?, ?, ?)';
+
     const [rows] = await conn.query(sql, Object.values(userInfo)); //query from database.
     conn.release();
     //console.log(rows);
@@ -44,3 +46,23 @@ exports.createOneNewUser = async function (req) {
 //     groupBy: '',
 //     sortBy: ''
 // };
+
+exports.loginUser = async function (req) {
+    console.log('Request to User login!');
+    const user = req.body;
+    const conn = await db.getPool().getConnection(); //CONNECTING
+
+    const [[rows]] = await conn.query(`select id, password from user where email="${user.email}"`);
+
+    if (rows.id) {
+
+        if (await password.loadPassword(user.password, rows.password)) {
+            return rows;
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+
+}

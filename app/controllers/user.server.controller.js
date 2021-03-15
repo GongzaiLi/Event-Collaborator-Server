@@ -15,6 +15,28 @@ exports.createOneNewUser = async function (req, res) {
         }
     } catch (err) {
         res.status(500)
-            .send(`ERROR getting users ${err}`);
+            .send(`ERROR getting ${err}`);
+    }
+}
+
+exports.loginUser = async function (req, res) {
+    console.log('User login checking');
+
+    try {
+        const result = await Users.loginUser(req);
+        if (result) {
+            res.status(200)
+                .send({
+                    userId: result.id,
+                    token: result.password
+                });
+        } else {
+            res.status(400)
+                .send('Bad Request');
+        }
+
+    } catch (err) {
+        res.status(500)
+            .send(`ERROR getting ${err}`);
     }
 }
