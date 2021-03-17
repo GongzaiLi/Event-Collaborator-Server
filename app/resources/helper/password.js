@@ -4,12 +4,10 @@ const saltRounds = 10;
 
 exports.hashPassword = async function(password) {
     //Hash the password
-    const hashPassword = await bcrypt.hash(password, saltRounds);
-    console.log(hashPassword);
-    return hashPassword;
+    return await bcrypt.hash(password, saltRounds);
 }
 
 exports.loadPassword = async function(password, hashPassword) {
-    const isMatch = await bcrypt.compare(password, hashPassword); // it will return true or false
-    return isMatch;
+     // it will return true or false
+    return await bcrypt.compare(password, hashPassword);
 }
