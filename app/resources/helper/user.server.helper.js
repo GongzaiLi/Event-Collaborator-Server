@@ -21,26 +21,26 @@ exports.checkEmail = async function (email) {
     return rows;
 }
 
-exports.checkFirstName = async function (first_name) {
-    const conn = await db.getPool().getConnection(); //CONNECTING
-    const [[rows]] = await conn.query("select * from user where first_name = (?)", [first_name]);
-    conn.release();
-    return rows;
-}
+// exports.checkFirstName = async function (first_name) {
+//     const conn = await db.getPool().getConnection(); //CONNECTING
+//     const [[rows]] = await conn.query("select * from user where first_name = (?)", [first_name]);
+//     conn.release();
+//     return rows;
+// }
 
-exports.checkLastName = async function (last_name) {
-    const conn = await db.getPool().getConnection(); //CONNECTING
-    const [[rows]] = await conn.query("select * from user where last_name = (?)", [last_name]);
-    conn.release();
-    return rows;
-}
+// exports.checkLastName = async function (last_name) {
+//     const conn = await db.getPool().getConnection(); //CONNECTING
+//     const [[rows]] = await conn.query("select * from user where last_name = (?)", [last_name]);
+//     conn.release();
+//     return rows;
+// }
 
-exports.checkImage = async function (image_filename) {
-    const conn = await db.getPool().getConnection(); //CONNECTING
-    const [[rows]] = await conn.query("select * from user where image_filename = (?)", [image_filename]);
-    conn.release();
-    return rows;
-}
+// exports.checkImage = async function (image_filename) {
+//     const conn = await db.getPool().getConnection(); //CONNECTING
+//     const [[rows]] = await conn.query("select * from user where image_filename = (?)", [image_filename]);
+//     conn.release();
+//     return rows;
+// }
 
 
 exports.checkToken = async function (auth_token) {
