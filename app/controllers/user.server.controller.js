@@ -4,14 +4,15 @@ exports.createOneNewUser = async function (req, res) {
     console.log('Register as a new user.');
 
     try {
-        const result = await Users.createOneNewUser(req);
-
-        if (result) {
-            res.status(201)
-                .send({userId: result.insertId});
+        const response = await Users.createOneNewUser(req);
+        if (response) {
+            if (response.insertId >= 0) {
+                res.status(201) // minimum: 0
+                    .send({userId: response.insertId});
+            }
         } else {
             res.status(400)
-                .send('400: Bad Request');
+                .send('400: Bad Request'); // need talk what is the error
         }
     } catch (err) {
         res.status(500)
@@ -87,7 +88,7 @@ exports.updateUser = async function (req, res) {
     try {
         const result = await Users.updateUser(req);
 
-        if (result) {
+        if (result === 200) {
             res.status(200)
                 .send("OK");
         } else {
