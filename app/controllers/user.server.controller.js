@@ -10,7 +10,7 @@ exports.createUser = async function (req, res) {
       res.status(201)
         .send({userId: response.insertId});
     } else {
-      res.status(400)
+      res.status(401)
         .send('400: Bad Request'); // need talk what is the error
     }
   } catch (err) {
