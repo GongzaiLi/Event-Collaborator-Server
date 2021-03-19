@@ -115,7 +115,6 @@ exports.validateCurrentPasswordSchema = function (request) {
   return false;
 }
 exports.validateImageRaw = function (raw) {
-  console.log(raw);
   return (raw.toUpperCase() === "PNG" || raw.toUpperCase() === "JPG" || raw.toUpperCase() === "JPEG" || raw.toUpperCase() === "GIF");
 }
 
