@@ -119,7 +119,7 @@ exports.getImage = async function (req, res) {
         const response = await Users.getImages(req);
         if (response) {
             console.log(response);
-            let photo = fs.readFileSync('./storage/images/' + response.image, (err, data) => {
+            let photo = fs.readFileSync('storage/images/' + response.image, (err, data) => {
                 if (err) throw err;
                 return data;
             });
