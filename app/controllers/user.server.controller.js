@@ -114,3 +114,18 @@ exports.updateUser = async function (req, res) {
 
     }
 }
+
+exports.getImage = async function (req, res) {
+    console.log("get a user's Image.");
+
+    try {
+        const response = await Users.getImages(req);
+        res.status(200)
+            .send("OK");
+
+    } catch (err) {
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
+    }
+
+}

@@ -6,8 +6,7 @@ exports.createUser = async function (req) {
     console.log('Request to Register as a new user into the database...');
 
     let registerInfo = req.body;
-
-    if (registerInfo.email && registerInfo.firstName && registerInfo.lastName && registerInfo.password) {
+    if (("email" in registerInfo) && ("firstName" in registerInfo) && ("lastName" in registerInfo) && ("password" in registerInfo)) {
         if (userHelper.validateEmail(registerInfo.email)) {
             registerInfo.password = await password.hashPassword(registerInfo.password);
             return await userHelper.insertRegister(registerInfo);
@@ -24,7 +23,7 @@ exports.loginUser = async function (req) {
     const response = await userHelper.checkEmail(user.email);
 
     if (response) {
-        if (response.email && !response.auth_token) {// ???????????????????????????????????????? can login many time???
+        if (response.email && !response.auth_token) {// ???????????????????????????????????????? can login many time
             if (await password.loadPassword(user.password, response.password)) {
                 const token = await password.hashPassword(response.id.toString())
                 await userHelper.updateToken(token, response.id);
@@ -130,6 +129,14 @@ exports.updateUser = async function (req) {
     return status;
 }
 
+
+exports.getImages = async function(req) {
+    const id = req.params.id;
+
+
+
+
+}
 
 
 
