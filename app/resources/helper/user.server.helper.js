@@ -70,26 +70,53 @@ exports.updateToken = async function (auth_token, id) {
 
 //------------------------------------------------------valid----------{true, false}------------------------------------
 exports.validateEmail = function (email) {
-  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+  ///^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
-
-exports.validateRegisterSchema = function (request) {
-  let check = true;
-
-  if (!(typeof request.firstName === 'string' && request.firstName.length)) {
-    check = false;
+exports.validateFirstNameSchema = function (request) {
+  if ("firstName" in request) {
+    if (typeof request.firstName === 'string' && request.firstName.length) {
+      return true;
+    }
   }
-  if (!(typeof request.lastName === 'string' && request.firstName.length)) {
-    check = false;
+  return false;
+}
+exports.validateLastNameSchema = function (request) {
+  if ("lastName" in request) {
+    if (typeof request.lastName === 'string' && request.lastName.length) {
+      return true;
+    }
   }
-  if (!(typeof request.email === 'string' && request.email.length)) {
-    check = false;
+  return false;
+}
+exports.validateEmailSchema = function (request) {
+  if ("email" in request) {
+    if (typeof request.email === 'string' && request.email.length) {
+      return true;
+    }
   }
-  if (!(typeof request.password === 'string' && request.password.length)) {
-    check = false;
+  return false;
+}
+exports.validatePasswordSchema = function (request) {
+  if ("password" in request) {
+    if (typeof request.password === 'string' && request.password.length) {
+      return true;
+    }
   }
-  return check;
+  return false;
+}
+exports.validateCurrentPasswordSchema = function (request) {
+  if ("currentPassword" in request) {
+    if (typeof request.currentPassword === 'string' && request.currentPassword.length) {
+      return true;
+    }
+  }
+  return false;
+}
+exports.validateImageRaw = function (raw) {
+  console.log(raw);
+  return (raw.toUpperCase() === "PNG" || raw.toUpperCase() === "JPG" || raw.toUpperCase() === "JPEG" || raw.toUpperCase() === "GIF");
 }
 
 

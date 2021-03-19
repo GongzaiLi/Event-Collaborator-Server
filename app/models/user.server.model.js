@@ -5,28 +5,27 @@ const userHelper = require('../resources/helper/user.server.helper');
 exports.createUser = async function (req) {
   console.log('Request to Register as a new user into the database...');
 
-  let registerInfo = req.body;
-  if (("email" in registerInfo) && ("firstName" in registerInfo) && ("lastName" in registerInfo) && ("password" in registerInfo)) {
-    if (userHelper.validateRegisterSchema(registerInfo)) {
-      if (userHelper.validateEmail(registerInfo.email) && !await userHelper.checkEmail(registerInfo.email)) {
-        registerInfo.password = await password.hashPassword(registerInfo.password);
-        return await userHelper.insertRegister(registerInfo);
-      }
+  let userInfo = req.body;
+
+  if (userHelper.validateFirstNameSchema(userInfo) && userHelper.validateLastNameSchema(userInfo) &&
+    userHelper.validateEmailSchema(userInfo) && userHelper.validatePasswordSchema(userInfo)) {
+    if (userHelper.validateEmail(userInfo.email) && !await userHelper.checkEmail(userInfo.email)) {
+      userInfo.password = await password.hashPassword(userInfo.password);
+      return await userHelper.insertRegister(userInfo);
     }
   }
   return null;
-};
-//      console.log(1);
+}
+
 exports.loginUser = async function (req) {
   console.log('Request to User login!');
 
-  const user = req.body;
+  const userInfo = req.body;
 
-  const response = await userHelper.checkEmail(user.email);
-
-  if (response) {
-    if (response.email && !response.auth_token) {// ???????????????????????????????????????? can login many time
-      if (await password.loadPassword(user.password, response.password)) {
+  if (userHelper.validateEmailSchema(userInfo) && userHelper.validatePasswordSchema(userInfo)) {
+    const response = await userHelper.checkEmail(userInfo.email);
+    if (response) {
+      if (await password.loadPassword(userInfo.password, response.password)) {
         const token = await password.hashPassword(response.id.toString())
         await userHelper.updateToken(token, response.id);
         return {userId: response.id, token: token};
@@ -56,27 +55,14 @@ exports.getUser = async function (req) {
   const token = req.headers["x-authorization"];
   const userId = req.params.id;
 
-  let result = {
-    firstName: '',
-    lastName: '',
-    email: ''
-  }
-
   const responseToken = await userHelper.checkToken(token);
 
   if (responseToken) {
     if (responseToken.id.toString() === userId) { // row.id type is number
-      result.firstName = responseToken.first_name;
-      result.lastName = responseToken.last_name;
-      result.email = responseToken.email;
-      return result;
+      return {firstName: responseToken.first_name, lastName: responseToken.last_name, email: responseToken.email};
     } else {
       const responseId = await userHelper.checkId(userId);//console.log(response); if the sql not the data will return "undefined"
-      if (responseId) {
-        result.firstName = responseId.first_name;
-        result.lastName = responseId.last_name;
-        return result;
-      }
+      if (responseId) return {firstName: responseId.first_name, lastName: responseId.last_name};
     }
   }
   return null;
@@ -87,53 +73,98 @@ exports.updateUser = async function (req) {
 
   const token = req.headers["x-authorization"];
   const id = req.params.id;
-  let user = req.body;
-  let status = 400;//400 401 403
+  let userInfo = req.body; // check when the userInfo is empty. is 200 or 400?????
+
+  let status = 200;
+  let update = {
+    email: false,
+    password: false,
+    firstName: false,
+    lastName: false
+  }
 
   const loginUser = await userHelper.checkToken(token);
 
   if (loginUser) {
     if (loginUser.id === parseInt(id)) {
-      if (user.currentPassword) { //0, "", null, undefined, is false
-        if (await password.loadPassword(user.currentPassword, loginUser.password)) {
-          await userHelper.updatePassword(await password.hashPassword(user.password), loginUser.id);
-          status = 200;
-        } else {
-          return 400; // ??????if current password is not right ?????------------------------------------
+      if (Object.keys(userInfo).length) {
+
+        if ('email' in userInfo) {
+          if (userHelper.validateEmailSchema(userInfo)) {
+            if (userHelper.validateEmail(userInfo.email) && !await userHelper.checkEmail(userInfo.email)) { // check the email only check @???
+              update.email = true;
+
+            } else {
+              return 400;
+            }
+          } else {
+            return 400;
+          }
         }
-      }
-      if (user.firstName) {
-        await userHelper.updateFirstName(user.firstName, id);
-        status = 200;
+
+        if ('password' in userInfo) {
+          if (userHelper.validatePasswordSchema(userInfo) && userHelper.validateCurrentPasswordSchema(userInfo)) {
+            if (await password.loadPassword(userInfo.currentPassword, loginUser.password)) {
+              update.password = true;
+            } else {
+              return 400; // 403 not sure ???????
+            }
+          } else {
+            return 400;
+          }
+        }
+
+        if ('firstName' in userInfo) {
+          if (userHelper.validateFirstNameSchema(userInfo)) {
+            update.firstName = true;
+          } else {
+            return 400;
+          }
+        }
+
+        if ('lastName' in userInfo) {
+          if (userHelper.validateLastNameSchema(userInfo)) {
+            update.lastName = true;
+          } else {
+            return 400;
+          }
+        }
+
       } else {
-        status = 400;
+        return 400; //// check when the userInfo is empty. is 200 or 400?????
       }
-      if (user.lastName) {
-        await userHelper.updateFirstName(user.lastName, id);
-        status = 200;
-      } else {
-        status = 400;
-      }
-      if (userHelper.validateEmail(user.email) && !await userHelper.checkEmail(user.email)) {
-        await userHelper.updateFirstName(user.email, id);
-        status = 200;
-      } else {
-        status = 400;// first Name change and lastName change passWord error. so now I need 400 or 200?????
-      }
+
     } else {
-      status = 403;
+      return 403;
     }
 
   } else {
-    status = 401;
+    return 401;
   }
 
+  if (update.email) await userHelper.updateEmail(userInfo.email, id);
+  if (update.password) await userHelper.updatePassword(await password.hashPassword(userInfo.password), id);
+  if (update.firstName) await userHelper.updateFirstName(userInfo.firstName, id);
+  if (update.lastName) await userHelper.updateLastName(userInfo.lastName, id);
   return status;
 }
 
 
 exports.getImages = async function (req) {
   const id = req.params.id;
+  const token = req.headers["x-authorization"];
+
+  const responseToken = await userHelper.checkToken(token);
+  //if (responseToken) {
+  //if(responseToken.id.toString() === userId) need or not?
+  const responseId = await userHelper.checkId(id);
+  const raw = responseId.image_filename.split('.')[1];
+  if (userHelper.validateImageRaw(raw)) {
+    return {image: responseId.image_filename, type: raw};
+  }
+
+  //}
+  //return null;
 
 
 }
