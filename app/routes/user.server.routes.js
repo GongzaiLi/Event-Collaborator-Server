@@ -14,7 +14,8 @@ module.exports = function (app) {
         .get(users.getUser)
         .patch(users.updateUser);
 
-  app.route(app.rootUrl + '/users/:id/image')
-    .get(users.getImage)
-    .delete(users.deleteImage);
+    app.route(app.rootUrl + '/users/:id/image')
+        .get(users.getImage)
+        .put(users.putImage)
+        .delete(users.deleteImage);
 }

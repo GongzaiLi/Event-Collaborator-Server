@@ -1,9 +1,5 @@
 const Users = require('../models/user.server.model');
-const fs = require('mz/fs');
-//const fs = require('fs'); //?mz/
 
-// const imageDirectory = './storage/images/';
-// const defaultImageDirectory = './storage/default/';
 
 exports.createUser = async function (req, res) {
     console.log('Register as a new user.');
@@ -113,27 +109,22 @@ exports.updateUser = async function (req, res) {
 exports.getImage = async function (req, res) {
     console.log("get a user's Image.");
 
-;
-
     try {
-        const response = await Users.getImages(req);
+
+        const response = await Users.getImage(req);
+
         if (response) {
-            console.log(response);
-            let photo = fs.readFileSync('storage/images/' + response.image, (err, data) => {
-                if (err) throw err;
-                return data;
-            });
-            console.log(1);
-            console.log(photo);
-            res.contentType("image/jpeg")//type === jpg is jpeg
-
-            res.status(200).send(photo);
-
+            if (response.type === "jpg") {
+                res.contentType("image/jpeg");
+            } else {
+                res.contentType(`image/${response.type}`);
+            }
+            res.status(200)
+                .send(response.image);
         } else {
             res.status(404)
                 .send("404: Not Found");
         }
-
     } catch (err) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
@@ -141,7 +132,41 @@ exports.getImage = async function (req, res) {
 
 }
 
-exports.deleteImage = async function (req, res) {
+exports.putImage = async function (req, res) {
+    console.log("put Image into a user's.");
 
+    try {//200 201 400 401 403 404
+        console.log(req.body); // why is empty;------------------?
+        const response = await Users.putImage(req);
+
+        console.log(response);
+        if (response === 200) {
+            res.status(200)
+                .send("OK");
+        } else if (response === 201) {
+            res.status(201)
+                .send('Created');
+        } else if (response === 400) {
+            res.status(400)
+                .send('400: Bad Request');
+        } else if (response === 401) {
+            res.status(401)
+                .send('401: Unauthorized');
+        } else if (response === 403) {
+            res.status(403)
+                .send('403: Forbidden');
+        } else {
+            res.status(404)
+                .send('404: Not Found');
+        }
+    } catch (err) {
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
+    }
+
+
+}
+
+exports.deleteImage = async function (req, res) {
 
 }

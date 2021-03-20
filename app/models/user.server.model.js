@@ -1,6 +1,6 @@
 const password = require('../resources/helper/password');
 const userHelper = require('../resources/helper/user.server.helper');
-
+const fs = require('mz/fs');
 
 exports.createUser = async function (req) {
     console.log('Request to Register as a new user into the database...');
@@ -159,25 +159,63 @@ exports.updateUser = async function (req) {
     return status;
 }
 
-
-exports.getImages = async function (req) {
+//---------------------------------------------------Image-------------------------------------------------------------
+exports.getImage = async function (req) {
     const id = req.params.id;
+    const responseId = await userHelper.checkId(id);
+    if (responseId) {
+        if (responseId.image_filename) {
+            let photo = fs.readFileSync('storage/photos/' + responseId.image_filename, (err, data) => {
+                if (err) throw err;
+                return data;
+            });
+            const type = responseId.image_filename.split('.')[1];
+            if (userHelper.validateImageRaw(type)) {
+                return {image: photo, type: type};
+            }
+        }
+    }
+    return null;
+} // check
+
+exports.putImage = async function (req) {
+
     const token = req.headers["x-authorization"];
+    const id = req.params.id;
+    const contentType = req.headers['content-type'];
+    const photo = req.body;//======================================??????????????????????????????????
+    //200 201 400
 
     const responseToken = await userHelper.checkToken(token);
-    //if (responseToken) {
-    //if(responseToken.id.toString() === userId) need or not?
-    const responseId = await userHelper.checkId(id);
-    const raw = responseId.image_filename.split('.')[1];
-    if (userHelper.validateImageRaw(raw)) {
-        return {image: responseId.image_filename, type: raw};
+
+    if (responseToken) {
+        if (responseToken.id === parseInt(id)) {
+            let path = 'storage/photos/';
+            let fileType = userHelper.checkImageType(contentType);
+
+            if (!fileType) return 400;
+            let fileName = `user_${id}`;
+
+            let filePath = `${path}${fileName}.${fileType}`;
+            let status = 200
+            console.log(photo); // is {} why no idea.
+            //write image into the file.
+                fs.writeFileSync(filePath, photo, 'binary', function (err) {
+                console.log(3);
+                if (err) throw err;
+            });
+            console.log(2);
+            if (!responseToken.image_filename) status = 201
+            await userHelper.updateImage(fileName, id);
+            return status;
+
+        } else {
+            return 403;
+        }
     }
+    return 401;
 
-    //}
-    //return null;
-
-
-}
+}// check and problem.
 
 
 
