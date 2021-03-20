@@ -110,15 +110,9 @@ exports.getImage = async function (req, res) {
     console.log("get a user's Image.");
 
     try {
-
         const response = await Users.getImage(req);
-
         if (response) {
-            if (response.type === "jpg") {
-                res.contentType("image/jpeg");
-            } else {
-                res.contentType(`image/${response.type}`);
-            }
+            res.contentType(response.type);
             res.status(200)
                 .send(response.image);
         } else {
@@ -130,16 +124,14 @@ exports.getImage = async function (req, res) {
             .send(`500: ERROR getting ${err}`);
     }
 
-}
+}//ok
 
 exports.putImage = async function (req, res) {
     console.log("put Image into a user's.");
 
     try {//200 201 400 401 403 404
-        console.log(req.body); // why is empty;------------------?
         const response = await Users.putImage(req);
 
-        console.log(response);
         if (response === 200) {
             res.status(200)
                 .send("OK");
@@ -165,8 +157,29 @@ exports.putImage = async function (req, res) {
     }
 
 
-}
+}//ok
 
 exports.deleteImage = async function (req, res) {
+    console.log("delete Image into a user's.");
 
-}
+    try {//200 401 403 404 500
+        const response = await Users.deleteImage(req);
+        if (response === 200) {
+            res.status(200)
+                .send("OK");
+        } else if (response === 401) {
+            res.status(401)
+                .send('401: Unauthorized');
+        } else if (response === 403) {
+            res.status(403)
+                .send('403: Forbidden');
+        } else {
+            res.status(404)
+                .send('404: Not Found');
+        }
+
+    } catch (err) {
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
+    }
+}//ok

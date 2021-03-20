@@ -162,49 +162,47 @@ exports.updateUser = async function (req) {
 //---------------------------------------------------Image-------------------------------------------------------------
 exports.getImage = async function (req) {
     const id = req.params.id;
-    const responseId = await userHelper.checkId(id);
-    if (responseId) {
-        if (responseId.image_filename) {
-            let photo = fs.readFileSync('storage/photos/' + responseId.image_filename, (err, data) => {
+    const image = await userHelper.checkImage(id);
+    if (image) {
+        if (image.image_filename) {
+            let photo = fs.readFileSync('storage/photos/' + image.image_filename, (err, data) => {
                 if (err) throw err;
                 return data;
             });
-            const type = responseId.image_filename.split('.')[1];
+            let type = image.image_filename.split('.')[1];
             if (userHelper.validateImageRaw(type)) {
+                type = (type === "jpg") ? "image/jpeg" : `image/${type}`;
                 return {image: photo, type: type};
             }
         }
     }
     return null;
-} // check
+} //ok check
 
 exports.putImage = async function (req) {
 
-    const token = req.headers["x-authorization"];
-    const id = req.params.id;
+    const token = req.headers["x-authorization"]; // order 200 201 401 403 404
     const contentType = req.headers['content-type'];
-    const photo = req.body;//======================================??????????????????????????????????
-    //200 201 400
+    const id = req.params.id;
+    const photo = req.body;
+
+    if (!await userHelper.checkId(id)) return 404;
+    let fileType = userHelper.checkImageType(contentType);
+    if (!fileType || !photo) return 400;
 
     const responseToken = await userHelper.checkToken(token);
-
     if (responseToken) {
         if (responseToken.id === parseInt(id)) {
+
+
             let path = 'storage/photos/';
-            let fileType = userHelper.checkImageType(contentType);
-
-            if (!fileType) return 400;
-            let fileName = `user_${id}`;
-
-            let filePath = `${path}${fileName}.${fileType}`;
+            let fileName = `user_${id}.${fileType}`;
+            let filePath = `${path}${fileName}`;
             let status = 200
-            console.log(photo); // is {} why no idea.
             //write image into the file.
-                fs.writeFileSync(filePath, photo, 'binary', function (err) {
-                console.log(3);
+            fs.writeFileSync(filePath, photo, 'binary', function (err) {
                 if (err) throw err;
             });
-            console.log(2);
             if (!responseToken.image_filename) status = 201
             await userHelper.updateImage(fileName, id);
             return status;
@@ -213,9 +211,36 @@ exports.putImage = async function (req) {
             return 403;
         }
     }
+
     return 401;
 
-}// check and problem.
+}//ok check and problem.
+
+exports.deleteImage = async function (req) {//200
+    console.log('Request to delete User image!');
+
+    const token = req.headers["x-authorization"];
+    const id = req.params.id;
+    const responseToken = await userHelper.checkToken(token);
+
+
+    if (responseToken) {
+        if (!await userHelper.checkId(id)) return 404;
+        if (responseToken.id === parseInt(id)) {
+            if (!responseToken.image_filename) return 404;
+            await userHelper.deleteImage(id);
+            return 200;
+        } else {
+
+            return 403;
+        }
+
+
+    }
+    return 401;
+
+}
+
 
 
 

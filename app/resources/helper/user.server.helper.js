@@ -30,6 +30,12 @@ exports.checkToken = async function (auth_token) {
     conn.release();
     return rows;
 }
+exports.checkImage = async function (id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query("select image_filename from user where id = (?)", [id]);
+    conn.release();
+    return rows;
+}
 
 exports.checkImageType = function (type) {
     if (type === 'image/png') return "png";
@@ -134,7 +140,14 @@ exports.validateImageRaw = function (raw) {
 //---------------------------------------------------Delete-------------------------------------------------------------
 exports.deleteToken = async function (id) { // token to null
     const conn = await db.getPool().getConnection(); //CONNECTING
-    const [rows] = await conn.query("update user set auth_token=null where id = (?)", [id]);
+    const [rows] = await conn.query("update user set auth_token = null where id = (?)", [id]);
+    conn.release();
+    return rows;
+}
+
+exports.deleteImage = async function (id) { // token to null
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update user set image_filename = null where id = (?)", [id]);
     conn.release();
     return rows;
 }
