@@ -1,5 +1,5 @@
 const password = require('../resources/helper/password');
-const userHelper = require('../resources/helper/user.server.helper');
+const userHelper = require('../resources/helper/users.server.helper');
 const fs = require('mz/fs');
 
 exports.createUser = async function (req) {
