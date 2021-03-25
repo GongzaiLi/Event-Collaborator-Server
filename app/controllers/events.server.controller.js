@@ -1,25 +1,41 @@
-const Events = require('../models/events.model');
+const Events = require('../models/events.server.model');
 
-exports.readAllEvents = async function (req, res) {
+exports.readEvents = async function (req, res) {
     try {
-        const result = await Events.readAllEvents(req);
-        res.statusMessage = "OK";
-        res.status(200).send(result);
+        const result = await Events.readEvents(req);
+        if (result) {
+            res.statusMessage = "OK";
+            res.status(200).send(result);
+        } else {
+            res.status(400).send("400: Bad Request");
+        }
+
     } catch (err) {
-        res.status(400).send("Bad Request");
+
         res.status(500).send("Internal Server Error");
     }
 };
 
-exports.createOneEvent = async function (req, res) {
+exports.createEvent = async function (req, res) {
+    //201 400 401 500
     try {
-        const eventId = await Events.createOneEvent(req);
-        console.log(eventId);
-        res.statusMessage = "OK";
-        res.status(201).send({eventId : eventId});
+        const response = await Events.createEvent(req);
+
+        if (response === 400) {
+            res.status(400)
+                .send("400: Bad Request");
+        } else if (response === 401) {
+            res.status(401)
+                .send("401: Unauthorized");
+        } else {
+            res.status(201)
+                .send("OK");
+
+
+        }
     } catch (err) {
-        console.log(err);
-        res.statusMessage = "Internal Server Error";
-        res.status(500).send();
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
     }
+
 }
