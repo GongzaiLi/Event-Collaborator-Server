@@ -165,18 +165,20 @@ exports.getImage = async function (req) {
     const image = await userHelper.checkImage(id);
     if (image) {
         if (image.image_filename) { // readFileSync or not.
-            let photo = fs.readFileSync('storage/photos/' + image.image_filename, (err, data) => {
+            try {
+                let photo = await fs.readFile('storage/photos/' + image.image_filename);
+                let type = image.image_filename.split('.')[1];
+                if (userHelper.validateImageRaw(type)) {
+                    type = (type === "jpg") ? "image/jpeg" : `image/${type}`;
+                    return {image: photo, type: type};
+                }
+            } catch (err) {
                 if (err) throw err;
-                return data;
-            });
-            let type = image.image_filename.split('.')[1];
-            if (userHelper.validateImageRaw(type)) {
-                type = (type === "jpg") ? "image/jpeg" : `image/${type}`;
-                return {image: photo, type: type};
+                return null;
             }
         }
     }
-    return null;
+
 } //ok check
 
 exports.putImage = async function (req) {
@@ -200,7 +202,7 @@ exports.putImage = async function (req) {
             let filePath = `${path}${fileName}`;
             let status = 200
             //write image into the file.
-            fs.writeFileSync(filePath, photo, 'binary', function (err) {
+            await fs.writeFile(filePath, photo, 'binary', function (err) {
                 if (err) throw err;
             });
             if (!responseToken.image_filename) status = 201
