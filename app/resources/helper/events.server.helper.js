@@ -28,19 +28,19 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
     if (categoryIds.length) { // using or
         sql.where += ` and (`;
         for (const categoryId in categoryIds) { // I do not Know....
-            sql.where += (categoryId === '0') ?  ` find_in_set(${categoryIds[categoryId]}, table2.categories)` :
+            sql.where += (categoryId === '0') ? ` find_in_set(${categoryIds[categoryId]}, table2.categories)` :
                 ` or find_in_set(${categoryIds[categoryId]}, table2.categories)`;
         }
         sql.where += ` )`;
     }
-    if (organizerId) {
+    if (organizerId.length) {
         sql.where += ` and table2.categoryIds = ${organizerId}`;
     }
-    if (sortBy) {
+    if (sortBy.length) {
         switch (sortBy) {
             case 'ALPHABETICAL_ASC' :
                 sql.sort = " order by table2.title asc";
-                break; // asc a-z desc z-a
+                break;
             case 'ALPHABETICAL_DESC' :
                 sql.sort = " order by table2.title desc";
                 break;
@@ -65,16 +65,73 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
         }
     }
     const conn = await db.getPool().getConnection(); //CONNECTING
-    console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
-    const [[rows]] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);
+    //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
+    const [rows] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);
     conn.release();
     return rows;
+}
 
 
+exports.filterEvents = function (raws, startIndex, count) {
+    let result = raws;
+    //console.log(result.length);
+    if (startIndex.length) {
+        result = result.filter((item, index) => index >= parseInt(startIndex)) //>2
+    }
+    if (count.length) {
+        result = result.filter((item, index) => index < parseInt(count)) //10
+        //result = result.slice(0, parseInt(queryParameters.count));
+    }
+    //console.log(result.length);
+    return result;
 }
 
 
 //---------------------------------------------------------valid--------------------------------------------------------
+exports.validQueryParameters = function (query) {
+
+    if ('startIndex' in query) {
+        if (!(Number.isInteger(parseInt(query.startIndex)) && query.startIndex.length)) {
+            return false
+        }
+    }
+
+    if ('count' in query) {
+        if (!(Number.isInteger(parseInt(query.count)) && query.count.length)) {
+            return false
+        }
+    }
+
+    if ('q' in query) {
+        if (!(typeof query.q === 'string' && query.q.length)) {
+            return false
+        }
+    }
+
+    if ('categoryIds' in query) {
+        for (const categoryId of query.categoryIds) {
+            if (!(Number.isInteger(parseInt(categoryId)) && categoryId.length)) {
+                return false
+            }
+        }
+    }
+
+    if ('organizerId' in query) {
+        if (!(Number.isInteger(parseInt(query.organizerId)) && query.organizerId.length)) {
+            return false
+        }
+    }
+
+    if ('sortBy' in query) {
+        if (!(typeof query.sortBy === 'string' && query.sortBy.length)) {
+            return false
+        }
+    }
+
+    return true;
+}
+
+
 exports.validTitle = function (request) { //**
     if ("title" in request) {
         if (typeof request.title === 'string' && request.title.length) {
@@ -135,7 +192,6 @@ exports.validCapacity = function (capacity) {
 exports.validRequiresAttendanceControl = function (requiresAttendanceControl) {
     return typeof requiresAttendanceControl === "boolean";
 }
-
 
 
 

@@ -2,8 +2,19 @@ const Events = require('../models/events.server.model');
 
 exports.readEvents = async function (req, res) {
     try {
-        const result = await Events.readEvents(req);
-        if (result) {
+        let result = {
+            eventId: -1,
+            title: "",
+            capacity: -1,
+            organizerFirstName: "",
+            organizerLastName: "",
+            date: "",
+            categories: [],
+            numAcceptedAttendees: -1
+        };
+        const response = await Events.readEvents(req);
+        if (response) {
+            this.result = response;
             res.statusMessage = "OK";
             res.status(200).send(result);
         } else {
