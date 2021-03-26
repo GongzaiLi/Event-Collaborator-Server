@@ -32,7 +32,6 @@ exports.createEvent = async function (req, res) {
             res.status(201)
                 .send("OK");
 
-
         }
     } catch (err) {
         res.status(500)

@@ -160,6 +160,7 @@ exports.updateUser = async function (req) {
 }
 
 //---------------------------------------------------Image-------------------------------------------------------------
+/**
 exports.getImage = async function (req) {
     const id = req.params.id;
     const image = await userHelper.checkImage(id);
@@ -180,6 +181,26 @@ exports.getImage = async function (req) {
     }
 
 } //ok check
+ **/
+exports.getImage = async function (req) {
+    const id = req.params.id;
+    const image = await userHelper.checkImage(id);
+    if (image) {
+        if (image.image_filename) { // readFileSync or not.
+            let photo = fs.readFileSync('storage/photos/' + image.image_filename, (err, data) => {
+                if (err) throw err;
+                return data;
+            });
+            let type = image.image_filename.split('.')[1];
+            if (userHelper.validateImageRaw(type)) {
+                type = (type === "jpg") ? "image/jpeg" : `image/${type}`;
+                return {image: photo, type: type};
+            }
+        }
+    }
+    return null;
+} //ok check
+
 
 exports.putImage = async function (req) {
 
@@ -202,7 +223,7 @@ exports.putImage = async function (req) {
             let filePath = `${path}${fileName}`;
             let status = 200
             //write image into the file.
-            await fs.writeFile(filePath, photo, 'binary', function (err) {
+            fs.writeFileSync(filePath, photo, 'binary', function (err) {
                 if (err) throw err;
             });
             if (!responseToken.image_filename) status = 201

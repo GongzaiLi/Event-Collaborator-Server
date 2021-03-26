@@ -73,14 +73,14 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
 }
 
 
-exports.filterEvents = function (raws, startIndex, count) {
+exports.filterEvents = async function (raws, startIndex, count) {
     let result = raws;
     //console.log(result.length);
     if (startIndex.length) {
-        result = result.filter((item, index) => index >= parseInt(startIndex)) //>2
+        result = await result.filter((item, index) => index >= parseInt(startIndex)) //>2
     }
     if (count.length) {
-        result = result.filter((item, index) => index < parseInt(count)) //10
+        result = await result.filter((item, index) => index < parseInt(count)) //10
         //result = result.slice(0, parseInt(queryParameters.count));
     }
     //console.log(result.length);
@@ -204,12 +204,12 @@ exports.validDescription = function (request) {//**
 exports.validCategoryIds = async function (request) {//**
     if (Array.isArray(request.categoryIds)) {
         for (const categoryId of request.categoryIds) {
-            if (! await this.checkCategoryId(categoryId)) {
+            if (!await this.checkCategoryId(categoryId)) {
                 return false;
             }
         }
     } else {
-        if (! await this.checkCategoryId(request.categoryIds)) {
+        if (!await this.checkCategoryId(request.categoryIds)) {
             return false;
         }
     }
@@ -246,12 +246,11 @@ exports.validRequiresAttendanceControl = function (requiresAttendanceControl) {
 }
 
 //------------------------------------------------------check-----------------------------------------------------------
-exports.checkCategoryId = async function (categoryId) {
+exports.checkCategoryId = async function (categoryId) { // in table category or not
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [[rows]] = await conn.query(`select * from category where id = ${categoryId}`);
     conn.release();
     return rows;
-
 }
 
 
