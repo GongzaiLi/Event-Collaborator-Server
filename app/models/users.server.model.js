@@ -164,7 +164,7 @@ exports.getImage = async function (req) {
     const id = req.params.id;
     const image = await userHelper.checkImage(id);
     if (image) {
-        if (image.image_filename) {
+        if (image.image_filename) { // readFileSync or not.
             let photo = fs.readFileSync('storage/photos/' + image.image_filename, (err, data) => {
                 if (err) throw err;
                 return data;
