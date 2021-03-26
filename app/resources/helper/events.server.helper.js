@@ -3,7 +3,7 @@ const db = require('../../../config/db');
 //----------------------------------------------------------Get/events modify--------------------------------------------------
 exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
     const sql = {
-        table1: `(select event.id, count(user_id) as numAcceptedAttendees from event, 
+        table1: `(select event.id as eventId, count(user_id) as numAcceptedAttendees from event, 
                     event_attendees where event.id = event_attendees.event_id and 
                     attendance_status_id = (select id from attendance_status 
                                             where name = 'accepted') 
@@ -19,8 +19,8 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
                    from event, event_category, user
                    where event.id = event_category.event_id and user.id = event.organizer_id
                    group by event.id) as table2`,
-        where: "WHERE table1.id = table2.eventId",
-        sort: "order by table2.date"
+        where: "WHERE table1.eventId = table2.eventId",
+        sort: "order by table2.date desc"
     }
     if (q.length) {
         sql.where += ` and (table2.title like '%${q}%' or description like '%${q}%')`;
@@ -68,6 +68,7 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
     //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
     const [rows] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);
     conn.release();
+
     return rows;
 }
 
@@ -85,50 +86,100 @@ exports.filterEvents = function (raws, startIndex, count) {
     //console.log(result.length);
     return result;
 }
+exports.modifyResult = function (rows) {
+    let result = [];//const DateFormat = require("dateformat");
+
+    for (let row of rows) {
+        let dataModel = {
+            eventId: -1,
+            title: "",
+            capacity: -1,
+            organizerFirstName: "",
+            organizerLastName: "",
+            date: "",
+            categories: [],
+            numAcceptedAttendees: -1
+        };
+        dataModel.eventId = row.eventId;
+        dataModel.title = row.title;
+        dataModel.capacity = row.capacity;
+        dataModel.organizerFirstName = row.organizerFirstName;
+        dataModel.organizerLastName = row.organizerLastName;
+        dataModel.date = row.date;
+        dataModel.categories = row.categories.split(',').map(function (item) {
+            return parseInt(item);
+        });
+        dataModel.numAcceptedAttendees = row.numAcceptedAttendees;
+
+        //console.log(dataModel);
+        result.push(dataModel);
+    }
+    return result;
+}
 
 
 //---------------------------------------------------------valid--------------------------------------------------------
 exports.validQueryParameters = function (query) {
+    let newQuery = {
+        q: '',
+        categoryIds: [],
+        organizerId: '',
+        sortBy: '',
+        count: '',
+        startIndex: ''
+    };
 
     if ('startIndex' in query) {
         if (!(Number.isInteger(parseInt(query.startIndex)) && query.startIndex.length)) {
-            return false
+            return false;
         }
+        newQuery.startIndex = query.startIndex;
     }
 
     if ('count' in query) {
         if (!(Number.isInteger(parseInt(query.count)) && query.count.length)) {
-            return false
+            return false;
         }
+        newQuery.count = query.count;
     }
 
     if ('q' in query) {
         if (!(typeof query.q === 'string' && query.q.length)) {
-            return false
+            return false;
         }
+        newQuery.q = query.q;
     }
 
     if ('categoryIds' in query) {
-        for (const categoryId of query.categoryIds) {
-            if (!(Number.isInteger(parseInt(categoryId)) && categoryId.length)) {
-                return false
+        if (Array.isArray(query.categoryIds)) {
+            for (const categoryId of query.categoryIds) {
+                if (!(Number.isInteger(parseInt(categoryId)) && categoryId.length)) {
+                    return false;
+                }
+            }
+        } else {
+            if (!(Number.isInteger(parseInt(query.categoryIds)) && query.categoryIds.length)) {
+                return false;
             }
         }
+
+        newQuery.categoryIds = query.categoryIds;
     }
 
     if ('organizerId' in query) {
         if (!(Number.isInteger(parseInt(query.organizerId)) && query.organizerId.length)) {
-            return false
+            return false;
         }
+        newQuery.organizerId = query.organizerId;
     }
 
     if ('sortBy' in query) {
         if (!(typeof query.sortBy === 'string' && query.sortBy.length)) {
-            return false
+            return false;
         }
+        newQuery.sortBy = query.sortBy;
     }
-
-    return true;
+    return newQuery;
 }
 
 
@@ -150,18 +201,19 @@ exports.validDescription = function (request) {//**
     return false;
 }
 
-exports.validCategoryIds = function (request) {//**
-    if ("categoryIds" in request) {
-        if (request.categoryIds.length) {
-            for (const categoryId in request.categoryIds) {
-                if (!Number.isInteger(categoryId)) {
-                    return false;
-                }
+exports.validCategoryIds = async function (request) {//**
+    if (Array.isArray(request.categoryIds)) {
+        for (const categoryId of request.categoryIds) {
+            if (! await this.checkCategoryId(categoryId)) {
+                return false;
             }
-            return true;
+        }
+    } else {
+        if (! await this.checkCategoryId(request.categoryIds)) {
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 exports.validData = function (request) {
@@ -193,8 +245,14 @@ exports.validRequiresAttendanceControl = function (requiresAttendanceControl) {
     return typeof requiresAttendanceControl === "boolean";
 }
 
+//------------------------------------------------------check-----------------------------------------------------------
+exports.checkCategoryId = async function (categoryId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query(`select * from category where id = ${categoryId}`);
+    conn.release();
+    return rows;
 
-
+}
 
 
 

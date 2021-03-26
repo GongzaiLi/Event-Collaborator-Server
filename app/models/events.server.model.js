@@ -6,22 +6,16 @@ exports.readEvents = async function (req) {
     console.log('Request to get all Event from the database...');
 
     const queryParameters = req.query;// 1. filtered: q categoryIds organizerId 2. sorted 3. startIndex and count
-    //console.log(queryParameters);
-    let query = {
-        q: '',
-        categoryIds: [],
-        organizerId: '',
-        sortBy: '',
-        count: '',
-        startIndex: ''
-    };
-    if (eventHelper.validQueryParameters(queryParameters)) {
-        this.query = queryParameters;// need this
-        //console.log(query);
+    const query = eventHelper.validQueryParameters(queryParameters);
+
+    if (query) {
+        if (! await eventHelper.validCategoryIds(query)) return null;
+
         const rows = await eventHelper.getEvent(query.q, query.categoryIds, query.organizerId, query.sortBy);
-        //console.log(rows, "============================================");
-        const response = eventHelper.filterEvents(rows, query.startIndex, query.count)
-        //console.log(response, "=============================================1");
+        const result  = eventHelper.modifyResult(rows);
+        const response = eventHelper.filterEvents(result, query.startIndex, query.count);
+
+
         return response;
     } else {
         return null;
