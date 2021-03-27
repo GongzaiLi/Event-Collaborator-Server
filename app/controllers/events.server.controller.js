@@ -57,6 +57,28 @@ exports.getOneEvent = async function (req, res) {
 }
 
 exports.updateEvent = async function (req, res) {
-    //200 400 401 403 303 500
+    //200 400 401 403 404 500
+    try {
+        const response = await Events.updateEvent(req);
 
+        if (response === 200) {
+            res.status(200)
+                .send("OK");
+        } else if (response === 400) {
+            res.status(400)
+                .send("400: Bad Request");
+        } else if (response === 401) {
+            res.status(401)
+                .send("401: Unauthorized");
+        } else if (response === 403) {
+            res.status(403)
+                .send("403: Forbidden");
+        } else {
+            res.status(404)
+                .send("404: Not Found"); // not sure only in online
+        }
+    } catch (err) {
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
+    }
 }

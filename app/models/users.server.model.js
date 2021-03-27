@@ -78,7 +78,7 @@ exports.updateUser = async function (req) {
 
     const token = req.headers["x-authorization"];
     const id = req.params.id;
-    let userInfo = req.body; // check when the userInfo is empty. is 200 or 400?????
+    let userInfo = req.body;
 
     let status = 200;
     let update = {
@@ -137,7 +137,7 @@ exports.updateUser = async function (req) {
                     }
 
                 } else {
-                    return 400; //// check when the userInfo is empty. is 200 or 400?????
+                    return 400;
                 }
 
             } else {

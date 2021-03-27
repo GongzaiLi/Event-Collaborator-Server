@@ -50,7 +50,6 @@ exports.createEvent = async function (req) {
     insertData.categoryIds = requestBody.categoryIds;
     insertData.date = requestBody.date;
 
-    console.log(1);
     if ('isOnline' in requestBody) {
         if (!eventHelper.validIsOnline(requestBody.isOnline)) return 400;
         if (requestBody.isOnline) insertData.isOnline = 1;
@@ -114,11 +113,13 @@ exports.getOneEvent = async function (req) {
     }
 
     const response = await eventHelper.getOneEvent(eventId);
+
     result.eventId = response.eventId;
     result.title = response.title;
     result.categories = response.categories.split(',').map(function (item) {
         return parseInt(item);
     });
+
     result.organizerFirstName = response.organizerFirstName;
     result.organizerLastName = response.organizerLastName;
     result.numAcceptedAttendees = response.numAcceptedAttendees;
@@ -131,6 +132,113 @@ exports.getOneEvent = async function (req) {
     result.venue = response.venue;
     result.requiresAttendanceControl = (response.requiresAttendanceControl) ? true : false;
     result.fee = response.fee;
+
+
     return result;
 } // need check
 
+exports.updateEvent = async function (req) {
+    const token = req.headers["x-authorization"];
+    const eventId = req.params.id;
+    const eventBody = req.body;
+
+
+    const findToken = await userHelper.checkToken(token);
+
+    const findEventId = await eventHelper.checkEventId(eventId);
+
+    console.log("date",findEventId.date);
+    const use = eventHelper.compareDate(findEventId.date);
+    console.log(use);
+
+
+
+    if (!findToken) return 401;// id for organizer_id
+    if (!findEventId) return 404;
+    if (findToken.id !== findEventId.organizer_id) return 403; // Data in the Fer
+
+    let checkUpdate = {
+        title: false,
+        description: false,
+        categoryIds: false,
+        date: false,
+        isOnline: false,
+        url: false,
+        venue: false,
+        capacity: false,
+        requiresAttendanceControl: false,
+        fee: false
+    };
+
+    if ('title' in eventBody) {
+        if (!eventHelper.validTitle(eventBody) || await eventHelper.checkTitle(eventBody.title)) {
+            return 400;
+        }
+        checkUpdate.title = true;
+    }
+
+    if ('description' in eventBody) {
+        if (!eventHelper.validDescription(eventBody)) {
+            return 400;
+        }
+        checkUpdate.description = true;
+    }
+
+    if ('categoryIds' in eventBody) {
+        if (!await eventHelper.validPostCategoryIds(eventBody)) {
+            return 400;
+        }
+        checkUpdate.categoryIds = true;
+    }
+
+    if ('date' in eventBody) {
+        if (!eventHelper.validData(eventBody)) {
+            return 400;
+        }
+        checkUpdate.date = true;
+    }
+
+    if ('isOnline' in eventBody) {
+        if (!eventHelper.validIsOnline(eventBody.isOnline)) {
+            return 400;
+        }
+        checkUpdate.isOnline = true;
+    }
+
+    if ('url' in eventBody) {
+        if (!eventHelper.validUrl(eventBody.url)) {
+            return 400;
+        }
+        checkUpdate.url = true;
+    }
+
+    if ('venue' in eventBody) {
+        if (!eventHelper.validVenue(eventBody.venue)) {
+            return 400;
+        }
+        checkUpdate.venue = true;
+    }
+
+    if ('capacity' in eventBody) {
+        if (!eventHelper.validCapacity(eventBody.capacity)) {
+            return 400;
+        }
+        checkUpdate.capacity = true;
+    }
+
+    if ('requiresAttendanceControl' in eventBody) {
+        if (!eventHelper.validRequiresAttendanceControl(eventBody.requiresAttendanceControl)) {
+            return 400;
+        }
+        checkUpdate.requiresAttendanceControl = true;
+    }
+
+    if ('fee' in eventBody) {
+        if (!eventHelper.validFee(eventBody.fee)) {
+            return 400;
+        }
+        checkUpdate.fee = true;
+    }
+
+
+}

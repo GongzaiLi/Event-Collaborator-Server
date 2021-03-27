@@ -20,14 +20,15 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
                    from event, event_category, user
                    where event.id = event_category.event_id and user.id = event.organizer_id
                    group by event.id) as table2`,
-        where: "WHERE table1.eventId = table2.eventId",
+        where: "",//WHERE table1.eventId = table2.eventId
         sort: "order by table2.date desc"
     }
     if (q.length) {
-        sql.where += ` and (table2.title like '%${q}%' or description like '%${q}%')`;
+        sql.where += (sql.where.length) ? ' and' : '';
+        sql.where += ` (table2.title like '%${q}%' or description like '%${q}%')`;
     }
     if (categoryIds.length) { // using or
-        sql.where += ` and (`;
+        sql.where += (sql.where.length) ? ' and (' : ' (';
         for (const categoryId in categoryIds) { // I do not Know....
             sql.where += (categoryId === '0') ? ` find_in_set(${categoryIds[categoryId]}, table2.categories)` :
                 ` or find_in_set(${categoryIds[categoryId]}, table2.categories)`;
@@ -35,7 +36,8 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
         sql.where += ` )`;
     }
     if (organizerId.length) {
-        sql.where += ` and table2.organizerId = ${organizerId}`;
+        sql.where += (sql.where.length) ? ' and' : '';
+        sql.where += ` table2.organizerId = ${organizerId}`;
     }
     if (sortBy.length) {
         switch (sortBy) {
@@ -67,7 +69,8 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
     }
     const conn = await db.getPool().getConnection(); //CONNECTING
     //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
-    const [rows] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);
+    console.log()
+    const [rows] = await conn.query(`select * from ${sql.table1} right join ${sql.table2} on table1.eventId = table2.eventId ${sql.where} ${sql.sort}`);
     conn.release();
 
     return rows;
@@ -100,7 +103,7 @@ exports.modifyResult = function (rows) {
             organizerLastName: "",
             date: "",
             categories: [],
-            numAcceptedAttendees: -1
+            numAcceptedAttendees: 0
         };
         dataModel.eventId = row.eventId;
         dataModel.title = row.title;
@@ -111,7 +114,7 @@ exports.modifyResult = function (rows) {
         dataModel.categories = row.categories.split(',').map(function (item) {
             return parseInt(item);
         });
-        dataModel.numAcceptedAttendees = row.numAcceptedAttendees;
+        dataModel.numAcceptedAttendees = row.numAcceptedAttendees || 0;
 
         //console.log(dataModel);
         result.push(dataModel);
@@ -142,12 +145,11 @@ exports.getOneEvent = async function (eventId) {
                    from event, event_category, user
                    where event.id = event_category.event_id and user.id = event.organizer_id
                    group by event.id) as table2`,
-        where: "WHERE table1.eventId = table2.eventId",
     }
-    sql.where += ` and table1.eventId = ${eventId}`;
     const conn = await db.getPool().getConnection(); //CONNECTING
     //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
-    const [[rows]] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where}`);
+    //console.log(`select * from ${sql.table1} right join ${sql.table2} on table1.eventId = table2.eventId where table2.eventId = ${eventId}`);
+    const [[rows]] = await conn.query(`select * from ${sql.table1} right join ${sql.table2} on table1.eventId = table2.eventId where table2.eventId = ${eventId}`);
     conn.release();
     return rows;
 }
@@ -217,43 +219,42 @@ exports.validQueryParameters = function (query) {
     return newQuery;
 }
 
-
-exports.validTitle = function (request) {
-    if ("title" in request) {
-        if (typeof request.title === 'string' && request.title.length) {
+exports.validTitle = function (eventBody) {
+    if ("title" in eventBody) {
+        if (typeof eventBody.title === 'string' && eventBody.title.length) {
             return true;
         }
     }
     return false;
 } //**
 
-exports.validDescription = function (request) {
-    if ("description" in request) {
-        if (typeof request.description === 'string' && request.description.length) {
+exports.validDescription = function (eventBody) {
+    if ("description" in eventBody) {
+        if (typeof eventBody.description === 'string' && eventBody.description.length) {
             return true;
         }
     }
     return false;
 }//**
 
-exports.validGetCategoryIds = async function (request) {
-    if (Array.isArray(request.categoryIds)) {
-        for (const categoryId of request.categoryIds) {
+exports.validGetCategoryIds = async function (eventBody) {
+    if (Array.isArray(eventBody.categoryIds)) {
+        for (const categoryId of eventBody.categoryIds) {
             if (!await this.checkCategoryId(categoryId)) {
                 return false;
             }
         }
     } else {
-        if (!await this.checkCategoryId(request.categoryIds)) {
+        if (!await this.checkCategoryId(eventBody.categoryIds)) {
             return false;
         }
     }
     return true;
-}
+}//-----------------------------------------async
 
-exports.validPostCategoryIds = async function (request) {
-    if (Array.isArray(request.categoryIds) && request.categoryIds.length) {
-        for (const categoryId of request.categoryIds) {
+exports.validPostCategoryIds = async function (eventBody) {
+    if (Array.isArray(eventBody.categoryIds) && eventBody.categoryIds.length) {
+        for (const categoryId of eventBody.categoryIds) {
             if (!await this.checkCategoryId(categoryId)) {
                 return false;
             }
@@ -261,13 +262,12 @@ exports.validPostCategoryIds = async function (request) {
         return true;
     }
     return false;
-}//**
+}//**-----------------------------------------async
 
-exports.validData = function (request) {
-    if ("date" in request) {
-        if (typeof request.date === 'string' && request.date.length) {
-            console.log(0);
-            if (moment(request.date, "YYYY-MM-DD HH:mm:ss.SSS", true).isValid() || moment(request.date, "YYYY-MM-DD HH:mm:ss", true).isValid()) {
+exports.validData = function (eventBody) {
+    if ("date" in eventBody) {
+        if (typeof eventBody.date === 'string' && eventBody.date.length) {
+            if (moment(eventBody.date, "YYYY-MM-DD HH:mm:ss.SSS", true).isValid() || moment(eventBody.date, "YYYY-MM-DD HH:mm:ss", true).isValid()) {
                 return true;
             }
         }
@@ -347,3 +347,82 @@ exports.insertEventCategory = async function (id, categoryIds) {
     }
     return true;
 }
+
+//--------------------------------------------------UPDATE--------------------------------------------------------------
+exports.updateTitle = async function (title, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set title=(?) where id=(?)", [title, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateDescription = async function (description, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set description=(?) where id=(?)", [description, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateDate = async function (date, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set date=(?) where id=(?)", [date, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateIsOnline = async function (is_online, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set is_online=(?) where id=(?)", [is_online, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateUrl = async function (url, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set url=(?) where id=(?)", [url, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateVenue = async function (venue, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set venue=(?) where id=(?)", [venue, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateCapacity = async function (capacity, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set capacity=(?) where id=(?)", [capacity, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateRequiresAttendanceControl = async function (requires_attendance_control, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set requires_attendance_control=(?) where id=(?)", [requires_attendance_control, id]);
+    conn.release();
+    return rows;
+}
+
+exports.updateFee = async function (fee, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event set fee=(?) where id=(?)", [fee, id]);
+    conn.release();
+    return rows;
+}
+
+
+exports.updateCategoryIds = async function (CategoryIds, id) { //--------------------need delete older one
+
+}
+//-----------------------------------------------Comparison-------------------------------------------------------------
+exports.compareDate = function (date) {
+    let now = new Date();
+    console.log("now", now);
+    let eventDate = moment.utc(date);
+    console.log("eventDate", eventDate);
+    return moment(eventDate).isAfter(moment(eventDate))
+
+}
+//-----------------------------------------------Delete-----------------------------------------------------------------
