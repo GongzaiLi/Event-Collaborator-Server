@@ -30,12 +30,33 @@ exports.createEvent = async function (req, res) {
                 .send("401: Unauthorized");
         } else {
             res.status(201)
-                .send({eventId : response.insertId});
+                .send({eventId: response.insertId});
 
         }
     } catch (err) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
     }
+
+}
+
+exports.getOneEvent = async function (req, res) {
+    //200 404 500
+    try {
+        const response = await Events.getOneEvent(req);
+        if (response) {
+            res.statusMessage = "OK";
+            res.status(200).send(response);
+        } else {
+            res.status(404).send("404: Not Found");
+        }
+
+    } catch (err) {
+        res.status(500).send("Internal Server Error");
+    }
+}
+
+exports.updateEvent = async function (req, res) {
+    //200 400 401 403 303 500
 
 }

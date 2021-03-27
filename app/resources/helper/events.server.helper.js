@@ -16,7 +16,7 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
                       user.last_name as organizerLastName,
                       event.date as date, 
                       event.description, 
-                      event.organizer_id as categoryIds
+                      event.organizer_id as organizerId
                    from event, event_category, user
                    where event.id = event_category.event_id and user.id = event.organizer_id
                    group by event.id) as table2`,
@@ -35,7 +35,7 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
         sql.where += ` )`;
     }
     if (organizerId.length) {
-        sql.where += ` and table2.categoryIds = ${organizerId}`;
+        sql.where += ` and table2.organizerId = ${organizerId}`;
     }
     if (sortBy.length) {
         switch (sortBy) {
@@ -72,7 +72,6 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
 
     return rows;
 }
-
 
 exports.filterEvents = function (raws, startIndex, count) {
     let result = raws;
@@ -118,6 +117,39 @@ exports.modifyResult = function (rows) {
         result.push(dataModel);
     }
     return result;
+}
+
+exports.getOneEvent = async function (eventId) {
+    const sql = {
+        table1: `(select event.id as eventId, count(user_id) as numAcceptedAttendees from event, 
+                    event_attendees where event.id = event_attendees.event_id and 
+                    attendance_status_id = (select id from attendance_status 
+                                            where name = 'accepted') 
+                    group by event_id) as table1`,
+        table2: `(select event.id as eventId,
+                      GROUP_CONCAT(event_category.category_id) as categories,
+                      event.title as title, event.capacity as capacity,
+                      user.first_name as organizerFirstName,
+                      user.last_name as organizerLastName,
+                      event.date, 
+                      event.description,
+                      event.organizer_id as organizerId,
+                      event.is_online as isOnline,
+                      event.url,
+                      event.venue,
+                      event.requires_attendance_control as requiresAttendanceControl,
+                      event.fee
+                   from event, event_category, user
+                   where event.id = event_category.event_id and user.id = event.organizer_id
+                   group by event.id) as table2`,
+        where: "WHERE table1.eventId = table2.eventId",
+    }
+    sql.where += ` and table1.eventId = ${eventId}`;
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
+    const [[rows]] = await conn.query(`select * from ${sql.table1}, ${sql.table2} ${sql.where}`);
+    conn.release();
+    return rows;
 }
 
 
@@ -282,38 +314,12 @@ exports.checkTitle = async function (title) {
     return rows;
 }
 
-/**
- * //console.log(event);
- const conn = await db.getPool().getConnection(); //CONNECTING
- //title description date image_filename is_online url venue capacity requires_attendance_control fee organizer_id
-
- let sql = "insert into event (title ,description, date, image_filename, is_online, url, venue, capacity, requires_attendance_control, fee, organizer_id)";
- let sqlValues = "VALUES ( ";
-
- sqlValues += ` '${event.title}', `; // not null
- sqlValues += ` '${event.description}', `; // not null
- sqlValues += ` '${event.date}', `;// not null
- sqlValues += (event.imageFilename) ? ` '${event.imageFilename}', ` : 'NULL, ';
- sqlValues += ` ${event.isOnline}, `;
- sqlValues += (event.url) ? ` '${event.url}', ` : 'NULL, ';
- sqlValues += (event.venue) ? ` '${event.venue}', ` : 'NULL, ';
- sqlValues += (event.capacity) ? ` ${event.capacity}, ` : 'NULL, ';
- sqlValues += (event.requiresAttendanceControl) ? ` ${event.requiresAttendanceControl}, ` : '0, ';
- sqlValues += (event.fee) ? ` ${event.fee}, ` : '0.00, ';
- sqlValues += ` ${event.organizerId} )`;
-
- console.log(sql+sqlValues);
-
- const [rows] = await conn.query(sql+sqlValues); // ??????????????
- const eventId = rows.insertId;
-
- for (const categoryId of event.categoryIds) {
-        await conn.query("INSERT INTO event_category ( event_id, category_id) VALUES ( ? , ? )", [eventId, categoryId]); // ???????????
-    }
-
- conn.release(); // release space
- return eventId;
- */
+exports.checkEventId = async function (eventId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query(`select * from event where id = ${eventId}`);
+    conn.release();
+    return rows;
+}
 
 //----------------------------------------------------INSERT------------------------------------------------------------
 exports.insertEvent = async function (eventInfo) {
@@ -332,6 +338,7 @@ exports.insertEvent = async function (eventInfo) {
     conn.release();
     return rows;
 }
+
 exports.insertEventCategory = async function (id, categoryIds) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     for (const categoryId of categoryIds) {

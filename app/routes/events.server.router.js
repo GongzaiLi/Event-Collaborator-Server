@@ -16,4 +16,7 @@ module.exports = function (app) {
     app.route(app.rootUrl + '/events')
         .get(events.readEvents)// problem
         .post(events.createEvent);
+    app.route(app.rootUrl + '/events/:id')
+        .get(events.getOneEvent)
+        .patch(events.updateEvent);
 }

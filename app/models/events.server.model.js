@@ -14,14 +14,11 @@ exports.readEvents = async function (req) {
 
         const rows = await eventHelper.getEvent(query.q, query.categoryIds, query.organizerId, query.sortBy);
         const result = eventHelper.modifyResult(rows);
-        const response = eventHelper.filterEvents(result, query.startIndex, query.count); //some time has problem
-
-
-        return response;
+        return eventHelper.filterEvents(result, query.startIndex, query.count); //some time has problem
     } else {
         return null;
     }
-}
+} // ok/ but the filter has a problem should ask tutor startIndex = 1 and count = 1
 
 exports.createEvent = async function (req) {
     const token = req.headers["x-authorization"];
@@ -90,4 +87,50 @@ exports.createEvent = async function (req) {
     await eventHelper.insertEventCategory(response.insertId, insertData.categoryIds);
 
     return response;
-}
+} // need testing a date (yyyy-MM-dd) or date and time (yyyy-MM-dd hh:mm:ss.sss)
+
+exports.getOneEvent = async function (req) {
+    console.log('Request to get a Event from the database...');
+    const eventId = req.params.id;
+
+    if (!await eventHelper.checkEventId(eventId)) return null;
+
+    let result = {
+        eventId: -1,
+        title: "",
+        categories: [],
+        organizerFirstName: "",
+        organizerLastName: "",
+        numAcceptedAttendees: null,
+        capacity: null,
+        description: "",
+        organizerId: -1,
+        date: null,
+        isOnline: false,
+        url: null,
+        venue: null,
+        requiresAttendanceControl: false,
+        fee: null
+    }
+
+    const response = await eventHelper.getOneEvent(eventId);
+    result.eventId = response.eventId;
+    result.title = response.title;
+    result.categories = response.categories.split(',').map(function (item) {
+        return parseInt(item);
+    });
+    result.organizerFirstName = response.organizerFirstName;
+    result.organizerLastName = response.organizerLastName;
+    result.numAcceptedAttendees = response.numAcceptedAttendees;
+    result.capacity = response.capacity;
+    result.description = response.description;
+    result.organizerId = response.organizerId;
+    result.date = response.date;
+    result.isOnline = (response.isOnline) ? true : false;
+    result.url = response.url;
+    result.venue = response.venue;
+    result.requiresAttendanceControl = (response.requiresAttendanceControl) ? true : false;
+    result.fee = response.fee;
+    return result;
+} // need check
+
