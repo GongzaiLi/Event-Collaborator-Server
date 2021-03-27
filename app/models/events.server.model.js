@@ -263,3 +263,7 @@ exports.deleteEvent = async function (req) {
     await eventHelper.deleteEventIdInEvent(eventId);
     return 200;
 }//need check...................................
+
+exports.getAllCategories = async function () {
+    return await eventHelper.getAllCategories();
+}

@@ -13,7 +13,7 @@ exports.readEvents = async function (req, res) {
 
     } catch (err) {
 
-        res.status(500).send("Internal Server Error");
+        res.status(500).send(`500: ERROR getting ${err}`);
     }
 };
 
@@ -52,7 +52,7 @@ exports.getOneEvent = async function (req, res) {
         }
 
     } catch (err) {
-        res.status(500).send("Internal Server Error");
+        res.status(500).send(`500: ERROR getting ${err}`);
     }
 }
 
@@ -104,6 +104,17 @@ exports.deleteEvent = async function (req, res) {
     } catch (err) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
+    }
+}
+
+exports.getAllCategories = async function (req, res) {
+    try {
+        const response = await Events.getAllCategories();
+        res.statusMessage = "OK";
+        res.status(200).send(response);
+
+    } catch (err) {
+        res.status(500).send(`500: ERROR getting ${err}`);
     }
 
 }

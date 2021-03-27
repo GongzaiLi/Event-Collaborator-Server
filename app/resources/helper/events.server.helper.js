@@ -156,6 +156,14 @@ exports.getOneEvent = async function (eventId) {
     return rows;
 }
 
+exports.getAllCategories = async function () {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
+    const [rows] = await conn.query(`select id as categoryId, name from category`);
+    conn.release();
+    return rows;
+}
+
 
 //---------------------------------------------------------valid--------------------------------------------------------
 exports.validQueryParameters = function (query) {
@@ -352,7 +360,7 @@ exports.insertEvent = async function (eventInfo) {
             eventInfo.fee, eventInfo.organizer_id]); //query from database.
     conn.release();
     return rows;
-} //return can it ?????
+}
 
 exports.insertEventCategory = async function (categoryIds, id) {
     const conn = await db.getPool().getConnection(); //CONNECTING
@@ -361,7 +369,7 @@ exports.insertEventCategory = async function (categoryIds, id) {
         conn.release();
     }
     return true;
-}
+} //return can it ?????
 
 //--------------------------------------------------UPDATE--------------------------------------------------------------
 exports.updateTitle = async function (title, id) {
