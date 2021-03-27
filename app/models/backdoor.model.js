@@ -4,7 +4,7 @@ const fs = require('mz/fs'); //?
 const imageDirectory = './storage/images/';
 const defaultImageDirectory = './storage/default/';
 
-const password = require('../resources/helper/password');
+const password = require('../resources/helpers/password');
 
 
 exports.resetDb = async function () {

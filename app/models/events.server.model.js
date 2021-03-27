@@ -1,5 +1,5 @@
-const eventHelper = require('../resources/helper/events.server.helper');
-const userHelper = require('../resources/helper/users.server.helper');
+const eventHelper = require('../resources/helpers/events.server.helper');
+const userHelper = require('../resources/helpers/users.server.helper');
 
 
 exports.readEvents = async function (req) {

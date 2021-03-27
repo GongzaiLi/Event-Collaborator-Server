@@ -1,5 +1,5 @@
-const password = require('../resources/helper/password');
-const userHelper = require('../resources/helper/users.server.helper');
+const password = require('../resources/helpers/password');
+const userHelper = require('../resources/helpers/users.server.helper');
 const fs = require('mz/fs');
 
 exports.createUser = async function (req) {
@@ -236,7 +236,7 @@ exports.putImage = async function (req) {
 
     return 401;
 
-}//ok check and problem.
+}//ok check status and problem.
 
 exports.deleteImage = async function (req) {//200
     console.log('Request to delete User image!');
