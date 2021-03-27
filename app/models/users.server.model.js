@@ -80,7 +80,6 @@ exports.updateUser = async function (req) {
     const id = req.params.id;
     let userInfo = req.body;
 
-    let status = 200;
     let update = {
         email: false,
         password: false,
@@ -156,7 +155,7 @@ exports.updateUser = async function (req) {
     if (update.password) await userHelper.updatePassword(await password.hashPassword(userInfo.password), id);
     if (update.firstName) await userHelper.updateFirstName(userInfo.firstName, id);
     if (update.lastName) await userHelper.updateLastName(userInfo.lastName, id);
-    return status;
+    return 200;
 }
 
 //---------------------------------------------------Image-------------------------------------------------------------
@@ -211,7 +210,7 @@ exports.putImage = async function (req) {
 
     if (!await userHelper.checkId(id)) return 404;
     let fileType = userHelper.checkImageType(contentType);
-    if (!fileType || !photo) return 400;
+    if (!fileType || !photo) return 400;//body should in 404 or 400??????????????????????????????????????????
 
     const responseToken = await userHelper.checkToken(token);
     if (responseToken) {

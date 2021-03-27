@@ -82,3 +82,7 @@ exports.updateEvent = async function (req, res) {
             .send(`500: ERROR getting ${err}`);
     }
 }
+
+exports.deleteEvent = async function (req, res) {
+
+}

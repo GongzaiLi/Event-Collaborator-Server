@@ -18,5 +18,6 @@ module.exports = function (app) {
         .post(events.createEvent);
     app.route(app.rootUrl + '/events/:id')
         .get(events.getOneEvent)
-        .patch(events.updateEvent);
+        .patch(events.updateEvent)
+        .delete(events.deleteEvent);
 }

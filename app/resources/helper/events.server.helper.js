@@ -105,7 +105,7 @@ exports.modifyResult = function (rows) {
             organizerLastName: "",
             date: "",
             categories: [],
-            numAcceptedAttendees: 0
+            numAcceptedAttendees: 0//can null
         };
         dataModel.eventId = row.eventId;
         dataModel.title = row.title;
@@ -309,9 +309,23 @@ exports.checkCategoryId = async function (categoryId) { // in table category or 
     return rows;
 }
 
+exports.checkEventIdInEventCategory = async function (event_id) { // in table category or not
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query(`select GROUP_CONCAT(category_id) as categories from event_category where event_id = ${event_id}`);
+    conn.release();
+    return rows;
+}
+
 exports.checkTitle = async function (title) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [[rows]] = await conn.query("select * from event where title = (?)", [title]);
+    conn.release();
+    return rows;
+}
+
+exports.checkTitleNotSelf = async function (title, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query("select * from event where title = (?) and id != (?)", [title, id]);
     conn.release();
     return rows;
 }
@@ -322,7 +336,6 @@ exports.checkEventId = async function (eventId) {
     conn.release();
     return rows;
 }
-
 //----------------------------------------------------INSERT------------------------------------------------------------
 exports.insertEvent = async function (eventInfo) {
     const conn = await db.getPool().getConnection(); //CONNECTING
@@ -339,9 +352,9 @@ exports.insertEvent = async function (eventInfo) {
             eventInfo.fee, eventInfo.organizer_id]); //query from database.
     conn.release();
     return rows;
-}
+} //return can it ?????
 
-exports.insertEventCategory = async function (id, categoryIds) {
+exports.insertEventCategory = async function (categoryIds, id) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     for (const categoryId of categoryIds) {
         await conn.query('INSERT INTO event_category (event_id, category_id) VALUES (?, ?)', [id, categoryId]);
@@ -414,17 +427,22 @@ exports.updateFee = async function (fee, id) {
     return rows;
 }
 
-
-exports.updateCategoryIds = async function (CategoryIds, id) { //--------------------need delete older one
-
+exports.updateCategoryIds = async function (categoryIds, eventId) { //--------------------need delete older one return ?????
+    if (await this.checkEventIdInEventCategory(eventId)) {
+        await this.deleteCategoryIds(eventId);
+    }
+    return await this.insertEventCategory(categoryIds, eventId);
 }
 //-----------------------------------------------Comparison-------------------------------------------------------------
 exports.compareDate = function (date) {
     let now = new Date();
-    console.log("now", now);
-    let eventDate = moment.utc(date);
-    console.log("eventDate", eventDate);
-    return moment(eventDate).isAfter(moment(eventDate))
-
+    return moment(date).isAfter(moment(now))
 }
 //-----------------------------------------------Delete-----------------------------------------------------------------
+exports.deleteCategoryIds = async function (eventId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("DELETE FROM event_category WHERE event_id = (?)", [eventId]);
+    conn.release();
+    return rows;
+    //
+}

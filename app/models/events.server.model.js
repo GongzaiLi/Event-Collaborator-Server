@@ -83,7 +83,7 @@ exports.createEvent = async function (req) {
     }
 
     const response = await eventHelper.insertEvent(insertData);
-    await eventHelper.insertEventCategory(response.insertId, insertData.categoryIds);
+    await eventHelper.insertEventCategory(insertData.categoryIds, response.insertId);
 
     return response;
 } // need testing a date (yyyy-MM-dd) or date and time (yyyy-MM-dd hh:mm:ss.sss)
@@ -100,7 +100,7 @@ exports.getOneEvent = async function (req) {
         categories: [],
         organizerFirstName: "",
         organizerLastName: "",
-        numAcceptedAttendees: null,
+        numAcceptedAttendees: 0,//can null
         capacity: null,
         description: "",
         organizerId: -1,
@@ -142,20 +142,13 @@ exports.updateEvent = async function (req) {
     const eventId = req.params.id;
     const eventBody = req.body;
 
-
     const findToken = await userHelper.checkToken(token);
 
     const findEventId = await eventHelper.checkEventId(eventId);
 
-    console.log("date",findEventId.date);
-    const use = eventHelper.compareDate(findEventId.date);
-    console.log(use);
-
-
-
     if (!findToken) return 401;// id for organizer_id
-    if (!findEventId) return 404;
-    if (findToken.id !== findEventId.organizer_id) return 403; // Data in the Fer
+    if (!findEventId || !eventBody) return 404;
+    if (findToken.id !== findEventId.organizer_id || !eventHelper.compareDate(findEventId.date)) return 403; // Data
 
     let checkUpdate = {
         title: false,
@@ -171,7 +164,7 @@ exports.updateEvent = async function (req) {
     };
 
     if ('title' in eventBody) {
-        if (!eventHelper.validTitle(eventBody) || await eventHelper.checkTitle(eventBody.title)) {
+        if (!eventHelper.validTitle(eventBody) || await eventHelper.checkTitleNotSelf(eventBody.title, eventId)) {
             return 400;
         }
         checkUpdate.title = true;
@@ -240,5 +233,16 @@ exports.updateEvent = async function (req) {
         checkUpdate.fee = true;
     }
 
+    if (checkUpdate.title) await eventHelper.updateTitle(eventBody.title, eventId);
+    if (checkUpdate.description) await eventHelper.updateDescription(eventBody.description, eventId);
+    if (checkUpdate.categoryIds) await eventHelper.updateCategoryIds(eventBody.categoryIds, eventId);
+    if (checkUpdate.date) await eventHelper.updateDate(eventBody.date, eventId);
+    if (checkUpdate.isOnline) await eventHelper.updateIsOnline(eventBody.isOnline, eventId);
+    if (checkUpdate.url) await eventHelper.updateUrl(eventBody.url, eventId);
+    if (checkUpdate.venue) await eventHelper.updateVenue(eventBody.venue, eventId);
+    if (checkUpdate.capacity) await eventHelper.updateCapacity(eventBody.capacity, eventId);
+    if (checkUpdate.requiresAttendanceControl) await eventHelper.updateRequiresAttendanceControl(eventBody.requiresAttendanceControl, eventId);
+    if (checkUpdate.fee) await eventHelper.updateFee(eventBody.fee, eventId);
+    return 200;
+} // need check
 
-}
