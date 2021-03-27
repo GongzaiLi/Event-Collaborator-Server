@@ -39,6 +39,9 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
         sql.where += (sql.where.length) ? ' and' : '';
         sql.where += ` table2.organizerId = ${organizerId}`;
     }
+    if (sql.where.length) {
+        sql.where = 'where' + sql.where;
+    }
     if (sortBy.length) {
         switch (sortBy) {
             case 'ALPHABETICAL_ASC' :
@@ -69,7 +72,6 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
     }
     const conn = await db.getPool().getConnection(); //CONNECTING
     //console.log(`select * from ${sql.table1}, ${sql.table2} ${sql.where} ${sql.sort}`);//-----------------
-    console.log()
     const [rows] = await conn.query(`select * from ${sql.table1} right join ${sql.table2} on table1.eventId = table2.eventId ${sql.where} ${sql.sort}`);
     conn.release();
 
