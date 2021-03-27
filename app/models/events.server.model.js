@@ -53,6 +53,7 @@ exports.createEvent = async function (req) {
     insertData.categoryIds = requestBody.categoryIds;
     insertData.date = requestBody.date;
 
+    console.log(1);
     if ('isOnline' in requestBody) {
         if (!eventHelper.validIsOnline(requestBody.isOnline)) return 400;
         if (requestBody.isOnline) insertData.isOnline = 1;

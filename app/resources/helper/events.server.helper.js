@@ -234,7 +234,8 @@ exports.validPostCategoryIds = async function (request) {
 exports.validData = function (request) {
     if ("date" in request) {
         if (typeof request.date === 'string' && request.date.length) {
-            if (moment.utc(request.date, "YYYY-MM-DD HH:mm:ss.SSS") || moment.utc(request.date, "YYYY-MM-DD")) { // no sure
+            console.log(0);
+            if (moment(request.date, "YYYY-MM-DD HH:mm:ss.SSS", true).isValid() || moment(request.date, "YYYY-MM-DD HH:mm:ss", true).isValid()) {
                 return true;
             }
         }
