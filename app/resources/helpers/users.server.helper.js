@@ -41,6 +41,7 @@ exports.checkImageType = function (type) {
     if (type === 'image/png') return "png";
     if (type === 'image/jpg' || type === 'image/jpeg') return "jpg";
     if (type === 'image/gif') return "gif";
+    return null;
 }
 //---------------------------------------------------update------------------------------------------------
 exports.updateEmail = async function (email, id) {

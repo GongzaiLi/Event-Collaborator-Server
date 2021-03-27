@@ -49,7 +49,8 @@ exports.putImage = async function (req) {
     fs.writeFileSync(filePath, photo, 'binary', function (err) {
         if (err) throw err;
     });
-    if (!responseToken.image_filename) status = 201
+
+    if (!findEventId.image_filename) status = 201
     await eventImageHelper.updateImage(fileName, eventId);
     return status;
 } // not pass
