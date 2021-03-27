@@ -143,10 +143,10 @@ exports.updateEvent = async function (req) {
     const eventBody = req.body;
 
     const findToken = await userHelper.checkToken(token);
-
+    if (!findToken) return 401;// id for organizer_id
     const findEventId = await eventHelper.checkEventId(eventId);
 
-    if (!findToken) return 401;// id for organizer_id
+
     if (!findEventId || !eventBody) return 404;
     if (findToken.id !== findEventId.organizer_id || !eventHelper.compareDate(findEventId.date)) return 403; // Data
 
@@ -246,3 +246,20 @@ exports.updateEvent = async function (req) {
     return 200;
 } // need check
 
+exports.deleteEvent = async function (req) {
+    const token = req.headers["x-authorization"];
+    const eventId = req.params.id;
+
+    const findToken = await userHelper.checkToken(token);
+    if (!findToken) return 401;
+
+    const findEventId = await eventHelper.checkEventId(eventId);
+    if (!findEventId) return 404;
+
+    if (findToken.id !== findEventId.organizer_id) return 403;
+
+    await eventHelper.deleteEventIdInEventAttendee(eventId);
+    await eventHelper.deleteEventIdInEventCategory(eventId);
+    await eventHelper.deleteEventIdInEvent(eventId);
+    return 200;
+}//need check...................................

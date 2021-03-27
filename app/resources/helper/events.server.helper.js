@@ -429,7 +429,7 @@ exports.updateFee = async function (fee, id) {
 
 exports.updateCategoryIds = async function (categoryIds, eventId) { //--------------------need delete older one return ?????
     if (await this.checkEventIdInEventCategory(eventId)) {
-        await this.deleteCategoryIds(eventId);
+        await this.deleteEventIdInEventCategory(eventId);
     }
     return await this.insertEventCategory(categoryIds, eventId);
 }
@@ -439,10 +439,24 @@ exports.compareDate = function (date) {
     return moment(date).isAfter(moment(now))
 }
 //-----------------------------------------------Delete-----------------------------------------------------------------
-exports.deleteCategoryIds = async function (eventId) {
+
+exports.deleteEventIdInEventCategory = async function (eventId) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [rows] = await conn.query("DELETE FROM event_category WHERE event_id = (?)", [eventId]);
     conn.release();
     return rows;
-    //
+}
+
+exports.deleteEventIdInEventAttendee = async function (eventId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("DELETE FROM event_attendees WHERE event_id = (?)", [eventId]);
+    conn.release();
+    return rows;
+}
+
+exports.deleteEventIdInEvent = async function (eventId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("DELETE FROM event WHERE id = (?)", [eventId]);
+    conn.release();
+    return rows;
 }
