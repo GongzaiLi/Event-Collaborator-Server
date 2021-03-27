@@ -1,6 +1,5 @@
 const eventHelper = require('../resources/helper/events.server.helper');
 const userHelper = require('../resources/helper/users.server.helper');
-const fs = require('mz/fs');
 
 
 exports.readEvents = async function (req) {
