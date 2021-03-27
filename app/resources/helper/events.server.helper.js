@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const moment = require('moment');
 
 //----------------------------------------------------------Get/events modify--------------------------------------------------
 exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
@@ -73,19 +74,21 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
 }
 
 
-exports.filterEvents = async function (raws, startIndex, count) {
+exports.filterEvents = function (raws, startIndex, count) {
     let result = raws;
     //console.log(result.length);
     if (startIndex.length) {
-        result = await result.filter((item, index) => index >= parseInt(startIndex)) //>2
+        result = result.filter((item, index) => index >= parseInt(startIndex)) //>2
+        //result.slice(parseInt(startIndex));
     }
     if (count.length) {
-        result = await result.filter((item, index) => index < parseInt(count)) //10
-        //result = result.slice(0, parseInt(queryParameters.count));
+        result = result.filter((item, index) => index < parseInt(count)) //10
+        //result.slice(0, parseInt(count));
     }
     //console.log(result.length);
     return result;
 }
+
 exports.modifyResult = function (rows) {
     let result = [];//const DateFormat = require("dateformat");
 
@@ -183,25 +186,25 @@ exports.validQueryParameters = function (query) {
 }
 
 
-exports.validTitle = function (request) { //**
+exports.validTitle = function (request) {
     if ("title" in request) {
         if (typeof request.title === 'string' && request.title.length) {
             return true;
         }
     }
     return false;
-}
+} //**
 
-exports.validDescription = function (request) {//**
+exports.validDescription = function (request) {
     if ("description" in request) {
         if (typeof request.description === 'string' && request.description.length) {
             return true;
         }
     }
     return false;
-}
+}//**
 
-exports.validCategoryIds = async function (request) {//**
+exports.validGetCategoryIds = async function (request) {
     if (Array.isArray(request.categoryIds)) {
         for (const categoryId of request.categoryIds) {
             if (!await this.checkCategoryId(categoryId)) {
@@ -216,34 +219,52 @@ exports.validCategoryIds = async function (request) {//**
     return true;
 }
 
+exports.validPostCategoryIds = async function (request) {
+    if (Array.isArray(request.categoryIds) && request.categoryIds.length) {
+        for (const categoryId of request.categoryIds) {
+            if (!await this.checkCategoryId(categoryId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}//**
+
 exports.validData = function (request) {
     if ("date" in request) {
         if (typeof request.date === 'string' && request.date.length) {
-            return true;
+            if (moment.utc(request.date, "YYYY-MM-DD HH:mm:ss.SSS") || moment.utc(request.date, "YYYY-MM-DD")) { // no sure
+                return true;
+            }
         }
     }
     return false;
-}
+} /// may have problem // **
 
 exports.validIsOnline = function (isOnline) {
     return typeof isOnline === "boolean";
-}
+} // can 0 or 1 // can null
 
 exports.validUrl = function (url) {
     return typeof url === "string";
-}
+}// can null // can null
 
 exports.validVenue = function (venue) {
     return typeof venue === "string";
-}
+}// can null
 
 exports.validCapacity = function (capacity) {
     return Number.isInteger(capacity);
-}
+}// can null
 
 exports.validRequiresAttendanceControl = function (requiresAttendanceControl) {
     return typeof requiresAttendanceControl === "boolean";
-}
+}// can 0 or 1 // can null
+
+exports.validFee = function (fee) {
+    return typeof fee === "number";
+} // can 0.00//// can null
 
 //------------------------------------------------------check-----------------------------------------------------------
 exports.checkCategoryId = async function (categoryId) { // in table category or not
@@ -253,13 +274,68 @@ exports.checkCategoryId = async function (categoryId) { // in table category or 
     return rows;
 }
 
+exports.checkTitle = async function (title) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query("select * from event where title = (?)", [title]);
+    conn.release();
+    return rows;
+}
 
+/**
+ * //console.log(event);
+ const conn = await db.getPool().getConnection(); //CONNECTING
+ //title description date image_filename is_online url venue capacity requires_attendance_control fee organizer_id
 
+ let sql = "insert into event (title ,description, date, image_filename, is_online, url, venue, capacity, requires_attendance_control, fee, organizer_id)";
+ let sqlValues = "VALUES ( ";
 
+ sqlValues += ` '${event.title}', `; // not null
+ sqlValues += ` '${event.description}', `; // not null
+ sqlValues += ` '${event.date}', `;// not null
+ sqlValues += (event.imageFilename) ? ` '${event.imageFilename}', ` : 'NULL, ';
+ sqlValues += ` ${event.isOnline}, `;
+ sqlValues += (event.url) ? ` '${event.url}', ` : 'NULL, ';
+ sqlValues += (event.venue) ? ` '${event.venue}', ` : 'NULL, ';
+ sqlValues += (event.capacity) ? ` ${event.capacity}, ` : 'NULL, ';
+ sqlValues += (event.requiresAttendanceControl) ? ` ${event.requiresAttendanceControl}, ` : '0, ';
+ sqlValues += (event.fee) ? ` ${event.fee}, ` : '0.00, ';
+ sqlValues += ` ${event.organizerId} )`;
 
+ console.log(sql+sqlValues);
 
+ const [rows] = await conn.query(sql+sqlValues); // ??????????????
+ const eventId = rows.insertId;
 
+ for (const categoryId of event.categoryIds) {
+        await conn.query("INSERT INTO event_category ( event_id, category_id) VALUES ( ? , ? )", [eventId, categoryId]); // ???????????
+    }
 
+ conn.release(); // release space
+ return eventId;
+ */
 
-
-
+//----------------------------------------------------INSERT------------------------------------------------------------
+exports.insertEvent = async function (eventInfo) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query(`INSERT INTO event (title, description,
+                                                        date, is_online,
+                                                        url, venue,
+                                                        capacity, requires_attendance_control,
+                                                        fee, organizer_id)
+                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [eventInfo.title, eventInfo.description,
+            eventInfo.date, eventInfo.isOnline,
+            eventInfo.url, eventInfo.venue,
+            eventInfo.capacity, eventInfo.requiresAttendanceControl,
+            eventInfo.fee, eventInfo.organizer_id]); //query from database.
+    conn.release();
+    return rows;
+}
+exports.insertEventCategory = async function (id, categoryIds) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    for (const categoryId of categoryIds) {
+        await conn.query('INSERT INTO event_category (event_id, category_id) VALUES (?, ?)', [id, categoryId]);
+        conn.release();
+    }
+    return true;
+}

@@ -132,8 +132,8 @@ exports.validateCurrentPasswordSchema = function (request) {
     }
     return false;
 }
-exports.validateImageRaw = function (raw) {
-    return (raw === "png" || raw === "jpg" || raw === "jpeg" || raw === "gif");
+exports.validateImageRaw = function (type) {
+    return (type === "png" || type === "jpg" || type === "jpeg" || type === "gif");
 }
 
 

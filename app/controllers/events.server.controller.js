@@ -30,7 +30,7 @@ exports.createEvent = async function (req, res) {
                 .send("401: Unauthorized");
         } else {
             res.status(201)
-                .send("OK");
+                .send({eventId : response.insertId});
 
         }
     } catch (err) {
