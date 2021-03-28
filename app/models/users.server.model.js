@@ -14,8 +14,8 @@ exports.createUser = async function (req) {
             return await userHelper.insertRegister(userInfo);
         }
     }
-    return null;
-}
+    return false;
+} //ok for register id
 
 exports.loginUser = async function (req) {
     console.log('Request to User login!');
@@ -32,22 +32,22 @@ exports.loginUser = async function (req) {
             }
         }
     }
-    return null;
-}
+    return false;
+} //ok for login
 
 exports.logoutUser = async function (req) {
     console.log('Request to User logout!');
 
     const token = req.headers["x-authorization"];
-    const response = await userHelper.checkToken(token);
+    const findToken = await userHelper.checkToken(token);
 
-    if (response) {
-        if (response.id && response.auth_token) {
-            return await userHelper.deleteToken(response.id);
+    if (findToken) {
+        if (findToken.id && findToken.auth_token) {
+            return await userHelper.deleteToken(findToken.id);
         }
     }
-    return null;
-}
+    return false;
+} //ok for logout
 
 exports.getUser = async function (req) {
     console.log('Retrieve information about a user.');

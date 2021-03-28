@@ -5,22 +5,22 @@ exports.createUser = async function (req, res) {
     console.log('Register as a new user.');
 
     try {
-        const response = await Users.createUser(req);
+        const response = await Users.createUser(req, res);
         if (response) {
             res.status(201)
                 .send({userId: response.insertId});
         } else {
             res.status(400)
-                .send('400: Bad Request'); // need talk what is the error
+                .send('400: Bad Request');
         }
     } catch (err) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
     }
-}//ok
+}//ok 201 400 500
 
 exports.loginUser = async function (req, res) {
-    console.log('User login');
+    console.log('A User login');
 
     try {
         const response = await Users.loginUser(req);
@@ -35,7 +35,7 @@ exports.loginUser = async function (req, res) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
     }
-}//ok
+}//ok 200 400 500
 
 exports.logoutUser = async function (req, res) {
     console.log('User logout checking');
@@ -53,7 +53,7 @@ exports.logoutUser = async function (req, res) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
     }
-}//ok
+}//ok 200 401 500
 
 exports.getUser = async function (req, res) {
     console.log('Searching a user.')
