@@ -249,8 +249,6 @@ exports.deleteImage = async function (req) {//200
         if (!await userHelper.checkId(id)) return 404;
         if (responseToken.id === parseInt(id)) {
             if (!responseToken.image_filename) return 404;
-            console.log('------------------------------------------------------------------');
-            console.log('storage/photos/' + responseToken.image_filename);
             fs.unlinkSync('storage/photos/' + responseToken.image_filename, function (err) {
                 if (err) throw err;
             });

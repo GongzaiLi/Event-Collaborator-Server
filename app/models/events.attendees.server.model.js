@@ -8,12 +8,10 @@ exports.getAttendees = async function (req) {
     const eventId = req.params.id;
     const findEvent = await eventHelper.checkEventId(eventId);
     let userId = null;
-    if (!await eventAttendHelper.checkEventIdInEventAttendees(eventId) || !findEvent) return 404;
-    if (findToken) {
-        userId = findToken.id;
-    }
+    if (!await eventAttendHelper.checkEventIdInEventAttendees(eventId) || !findEvent) return null;
+    if (findToken) userId = findToken.id;
     return await eventAttendHelper.getEventAttendee(eventId, userId);
-}
+}// need check
 
 exports.createAttendees = async function (req) {
     const token = req.headers["x-authorization"];//201 403
@@ -33,7 +31,8 @@ exports.createAttendees = async function (req) {
 
     return 201;
 
-}
+}// need check
+
 exports.deleteAttendees = async function (req) {
 
 }
