@@ -20,8 +20,8 @@ exports.createAttendees = async function (req) {
     const eventId = req.params.id;
     const findEvent = await eventHelper.checkEventId(eventId);
 
-    if (! findToken) return 401;
-    if (! findEvent) return 404;
+    if (!findToken) return 401;
+    if (!findEvent) return 404;
 
     if (!eventHelper.compareDate(findEvent.date) || await eventAttendHelper.checkUserIdInEventAttendees(eventId, findToken.id)) return 403;
     let stats = 2;// is pending
@@ -34,5 +34,21 @@ exports.createAttendees = async function (req) {
 }// need check
 
 exports.deleteAttendees = async function (req) {
+    //200 404
+    const token = req.headers["x-authorization"];
+    const findToken = await userHelper.checkToken(token);
+    if (!findToken) return 401;
+    const eventId = req.params.id;
+    const findEvent = await eventHelper.checkEventId(eventId);
+    if (!findEvent) return 404;
 
+    const findEventAttend = await eventAttendHelper.checkUserIdInEventAttendees(eventId, findToken.id);
+    if (!findEventAttend || !eventHelper.compareDate(findEvent.date)) return 403;
+    if(findEventAttend){
+        if (findEventAttend.attendance_status_id === 3) {
+            return 403;
+        }
+    }
+    await eventAttendHelper.deleteEventIdAndUserIdInEventAttendee(eventId, findToken.id);
+    return 200;
 }

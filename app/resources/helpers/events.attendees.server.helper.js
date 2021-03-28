@@ -58,4 +58,12 @@ exports.insertEventIdInEventAttendees = async function (eventId, userId, status)
     conn.release();
     return rows;
 }
+//-----------------------------------------------Delete-----------------------------------------------------------------
 
+
+exports.deleteEventIdAndUserIdInEventAttendee = async function (eventId, userId) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("DELETE FROM event_attendees WHERE event_id = (?) and user_id = (?)", [eventId, userId]);
+    conn.release();
+    return rows;
+}
