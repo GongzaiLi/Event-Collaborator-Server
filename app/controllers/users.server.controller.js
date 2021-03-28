@@ -5,7 +5,7 @@ exports.createUser = async function (req, res) {
     console.log('Register as a new user.');
 
     try {
-        const response = await Users.createUser(req, res);
+        const response = await Users.createUser(req);
         if (response) {
             res.status(201)
                 .send({userId: response.insertId});
