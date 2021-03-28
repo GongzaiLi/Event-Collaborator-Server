@@ -85,7 +85,7 @@ exports.validStatus = function (status) {
 //--------------------------------------------------update--------------------------------------------------------------
 exports.updateStatus = async function (eventId, userId, status) {
     const conn = await db.getPool().getConnection(); //CONNECTING
-    const [rows] = await conn.query("update event_attendees set attendance_status_id=(?) where event_id=(?) and user_id=(?)", [status,eventId, userId]);
+    const [rows] = await conn.query("update event_attendees set attendance_status_id=(?) where event_id=(?) and user_id=(?)", [status, eventId, userId]);
     conn.release();
     return rows;
 }

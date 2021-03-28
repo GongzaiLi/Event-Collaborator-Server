@@ -25,8 +25,10 @@ exports.createAttendees = async function (req) {
     if (!findEvent) return 404;
 
     if (!eventHelper.compareDate(findEvent.date) || await eventAttendHelper.checkUserIdInEventAttendees(eventId, findToken.id)) return 403;
-    let stats = 2;// is pending
-    if (findEvent.organizer_id === findToken.id) stats = 1; // is accepted
+
+    const statusList = await eventAttendHelper.getAttendanceStatus();//status list
+    let stats = statusList.pending;
+    if (findEvent.organizer_id === findToken.id) stats = statusList.accepted; // is accepted
 
     await eventAttendHelper.insertEventIdInEventAttendees(eventId, findToken.id, stats);
 
@@ -60,7 +62,7 @@ exports.changeStatus = async function (req) {
     const eventId = req.params.event_id;
     const userId = req.params.user_id;
     const statusBody = req.body;
-    const statusList = await eventAttendHelper.getAttendanceStatus();
+    const statusList = await eventAttendHelper.getAttendanceStatus();//status list
     const findToken = await userHelper.checkToken(token);
     if (!findToken) return 401;
     const findEvent = await eventHelper.checkEventId(eventId);
