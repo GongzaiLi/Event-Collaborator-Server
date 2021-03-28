@@ -160,7 +160,7 @@ exports.updateUser = async function (req) {
 
 //---------------------------------------------------Image-------------------------------------------------------------
 /**
-exports.getImage = async function (req) {
+ exports.getImage = async function (req) {
     const id = req.params.id;
     const image = await userHelper.checkImage(id);
     if (image) {
@@ -216,7 +216,6 @@ exports.putImage = async function (req) {
     if (responseToken) {
         if (responseToken.id === parseInt(id)) {
 
-
             let path = 'storage/photos/';
             let fileName = `user_${id}.${fileType}`;
             let filePath = `${path}${fileName}`;
@@ -250,6 +249,11 @@ exports.deleteImage = async function (req) {//200
         if (!await userHelper.checkId(id)) return 404;
         if (responseToken.id === parseInt(id)) {
             if (!responseToken.image_filename) return 404;
+            console.log('------------------------------------------------------------------');
+            console.log('storage/photos/' + responseToken.image_filename);
+            fs.unlinkSync('storage/photos/' + responseToken.image_filename, function (err) {
+                if (err) throw err;
+            });
             await userHelper.deleteImage(id);
             return 200;
         } else {
