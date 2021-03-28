@@ -1,7 +1,7 @@
 const EventsImage = require('../models/events.images.server.model');
 
 exports.getImage = async function (req, res) {
-    console.log("get a user's Image.");
+    console.log("get a event's Image.");
 
     try {
         const response = await EventsImage.getImage(req);
@@ -21,7 +21,7 @@ exports.getImage = async function (req, res) {
 
 exports.putImage = async function (req, res) {
 
-    console.log("put Image into a user's.");
+    console.log("put Image into a event's.");
 
     try {//200 201 400 401 403 404
         const response = await EventsImage.putImage(req);

@@ -30,6 +30,7 @@ module.exports = function () {
     require('../app/routes/users.server.route')(app);
     require('../app/routes/events.server.router')(app);
     require('../app/routes/events.images.server.router')(app);
+    require('../app/routes/events.attendees.server.router')(app);
 
     return app;
 };

@@ -53,4 +53,4 @@ exports.putImage = async function (req) {
     if (!findEventId.image_filename) status = 201
     await eventImageHelper.updateImage(fileName, eventId);
     return status;
-} // not pass
+} // pass need check
