@@ -21,10 +21,23 @@ exports.getEventAttendee = async function (eventId, userId) {
     const [rows] = await conn.query(`${sql.select} ${sql.whereNoOrganizer} ${sql.orderBy}`);
     conn.release();
     return rows;
-
-
 }
 
+exports.getAttendanceStatus = async function () {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query(`select *
+                                     from attendance_status`);
+    conn.release();
+    let attendanceStatus = {
+        accepted: -1,
+        pending: -1,
+        rejected: -1
+    }
+    for (const status of rows) {
+        attendanceStatus[status.name] = status.id;
+    }
+    return attendanceStatus;
+}
 //---------------------------------------------------------check--------------------------------------------------------
 exports.checkEventIdInEventAttendees = async function (eventId) {
 
@@ -59,11 +72,20 @@ exports.insertEventIdInEventAttendees = async function (eventId, userId, status)
     return rows;
 }
 //-----------------------------------------------Delete-----------------------------------------------------------------
-
-
 exports.deleteEventIdAndUserIdInEventAttendee = async function (eventId, userId) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [rows] = await conn.query("DELETE FROM event_attendees WHERE event_id = (?) and user_id = (?)", [eventId, userId]);
+    conn.release();
+    return rows;
+}
+//------------------------------------------------validate--------------------------------------------------------------
+exports.validStatus = function (status) {
+    return typeof status === 'string';
+}
+//--------------------------------------------------update--------------------------------------------------------------
+exports.updateStatus = async function (eventId, userId, status) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [rows] = await conn.query("update event_attendees set attendance_status_id=(?) where event_id=(?) and user_id=(?)", [status,eventId, userId]);
     conn.release();
     return rows;
 }

@@ -43,6 +43,7 @@ exports.createAttendees = async function (req, res) {
     }
 
 }
+
 exports.deleteAttendees = async function (req, res) {
     try {
         const response = await EventAttend.deleteAttendees(req);
@@ -64,5 +65,30 @@ exports.deleteAttendees = async function (req, res) {
         res.status(500)
             .send(`500: ERROR getting ${err}`);
     }
+}
 
+exports.changeStatus = async function (req, res) {
+    try {//200 400 401 403 404 500
+        const response = await EventAttend.changeStatus(req);
+
+        if (response === 200) {
+            res.status(200)
+                .send("OK");
+        } else if (response === 400) {
+            res.status(400)
+                .send("400: Bad Request");
+        } else if (response === 401) {
+            res.status(401)
+                .send("401: Unauthorized");
+        } else if (response === 403) {
+            res.status(403)
+                .send("403: Forbidden");
+        } else {
+            res.status(404)
+                .send("404: Not Found");
+        }
+    } catch (err) {
+        res.status(500)
+            .send(`500: ERROR getting ${err}`);
+    }
 }
