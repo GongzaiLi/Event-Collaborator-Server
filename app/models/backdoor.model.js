@@ -4,7 +4,7 @@ const fs = require('mz/fs'); //?
 const imageDirectory = './storage/images/';
 const defaultImageDirectory = './storage/default/';
 
-const password = require('../resources/helpers/password');
+const passwords = require('../resources/helpers/password');
 
 
 exports.resetDb = async function () {
@@ -65,7 +65,7 @@ async function populateDefaultUsers() {
  */
 async function changePasswordToHash(user, passwordIndex) {
     // TODO you need to implement "passwords.hash()" yourself, then uncomment the line below.
-    user[passwordIndex] = await password.hashPassword(user[passwordIndex]);
+    user[passwordIndex] = await passwords.hashPassword(user[passwordIndex]);
     // It is recommended you use a reputable cryptology library to do the actual hashing/comparing for you...
 }
 

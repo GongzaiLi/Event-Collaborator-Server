@@ -13,12 +13,14 @@ exports.getEventAttendee = async function (eventId, userId) {
         orderBy: `order by dateOfInterest desc;`
     }
     const conn = await db.getPool().getConnection(); //CONNECTING
+    let rows;
     if (userId) {
-        const [rows] = await conn.query(`${sql.select} ${sql.whereOrganizer} ${sql.orderBy}`);
-        conn.release();
-        return rows;
+        [rows] = await conn.query(`${sql.select} ${sql.whereOrganizer} ${sql.orderBy}`);
+
+    } else {
+        [rows] = await conn.query(`${sql.select} ${sql.whereNoOrganizer} ${sql.orderBy}`);
     }
-    const [rows] = await conn.query(`${sql.select} ${sql.whereNoOrganizer} ${sql.orderBy}`);
+
     conn.release();
     return rows;
 }

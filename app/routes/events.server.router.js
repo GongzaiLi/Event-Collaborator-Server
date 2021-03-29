@@ -2,7 +2,7 @@ const events = require('../controllers/events.server.controller');
 
 module.exports = function (app) {
 
-    app.route(app.rootUrl + '/events/categories')//should put in the top should ask ???????????????????????????/
+    app.route(app.rootUrl + '/events/categories')//because the /events/:id
         .get(events.getAllCategories);
 
     app.route(app.rootUrl + '/events')

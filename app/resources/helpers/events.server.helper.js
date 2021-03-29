@@ -445,7 +445,7 @@ exports.updateCategoryIds = async function (categoryIds, eventId) { //----------
 exports.compareDate = function (date) {
     const now = new Date();
     return moment(date).isAfter(moment(now));
-}
+} //
 //-----------------------------------------------Delete-----------------------------------------------------------------
 
 exports.deleteEventIdInEventCategory = async function (eventId) {

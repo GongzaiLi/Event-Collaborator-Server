@@ -30,6 +30,7 @@ exports.checkToken = async function (auth_token) {
     conn.release();
     return rows;
 }
+
 exports.checkImage = async function (id) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [[rows]] = await conn.query("select image_filename from user where id = (?)", [id]);

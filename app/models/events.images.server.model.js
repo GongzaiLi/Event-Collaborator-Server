@@ -20,7 +20,7 @@ exports.getImage = async function (req) {
         }
     }
     return null;
-} // not pass
+} // pass need check
 
 exports.putImage = async function (req) {
     const token = req.headers["x-authorization"]; //

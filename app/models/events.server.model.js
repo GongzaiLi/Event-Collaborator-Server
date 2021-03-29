@@ -5,17 +5,17 @@ const userHelper = require('../resources/helpers/users.server.helper');
 exports.readEvents = async function (req) {
     console.log('Request to get all Event from the database...');
 
-    const queryParameters = req.query;// 1. filtered: q categoryIds organizerId 2. sorted 3. startIndex and count
+    const queryParameters = req.query;// 1. filtered: q categoryIds organizerId 2. sorted 3. startIndex and count---???????? can do sql
     const query = eventHelper.validQueryParameters(queryParameters);
 
     if (query) {
-        if (!await eventHelper.validGetCategoryIds(query)) return null;
+        if (!await eventHelper.validGetCategoryIds(query)) return false;
 
         const rows = await eventHelper.getEvent(query.q, query.categoryIds, query.organizerId, query.sortBy);
         const result = eventHelper.modifyResult(rows);
         return eventHelper.filterEvents(result, query.startIndex, query.count); //some time has problem
     } else {
-        return null;
+        return false;
     }
 } // ok/ but the filter has a problem should ask tutor startIndex = 1 and count = 1
 
@@ -91,7 +91,7 @@ exports.getOneEvent = async function (req) {
     console.log('Request to get a Event from the database...');
     const eventId = req.params.id;
 
-    if (!await eventHelper.checkEventId(eventId)) return null;
+    if (!await eventHelper.checkEventId(eventId)) return false;
 
     let result = {
         eventId: -1,
