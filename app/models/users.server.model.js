@@ -70,8 +70,8 @@ exports.getUser = async function (req) {
         return {firstName: responseId.first_name, lastName: responseId.last_name};
     }
 
-    return null;
-}
+    return false;
+}//ok for retrieve information about a user
 
 exports.updateUser = async function (req) {
     console.log('Request to update User!');
@@ -96,7 +96,7 @@ exports.updateUser = async function (req) {
 
                     if ('email' in userInfo) {
                         if (userHelper.validateEmailSchema(userInfo)) {
-                            if (userHelper.validateEmail(userInfo.email) && !await userHelper.checkEmail(userInfo.email)) { // check the email only check @???
+                            if (userHelper.validateEmail(userInfo.email) && !await userHelper.checkUpdateEmail(userInfo.email, id)) { // check the email only check @???
                                 update.email = true;
 
                             } else {
@@ -144,7 +144,7 @@ exports.updateUser = async function (req) {
             }
 
         } else {
-            return 404; // not sutr
+            return 404; //
         }
 
     } else {
@@ -156,7 +156,7 @@ exports.updateUser = async function (req) {
     if (update.firstName) await userHelper.updateFirstName(userInfo.firstName, id);
     if (update.lastName) await userHelper.updateLastName(userInfo.lastName, id);
     return 200;
-}
+}//ok change a user's details
 
 //---------------------------------------------------Image-------------------------------------------------------------
 /**
@@ -181,6 +181,7 @@ exports.updateUser = async function (req) {
 
 } //ok check
  **/
+
 exports.getImage = async function (req) {
     const id = req.params.id;
     const image = await userHelper.checkImage(id);
@@ -197,9 +198,8 @@ exports.getImage = async function (req) {
             }
         }
     }
-    return null;
-} //ok check
-
+    return false;
+} //ok retrieve a user's profile image.
 
 exports.putImage = async function (req) {
 
@@ -237,34 +237,25 @@ exports.putImage = async function (req) {
 
 }//ok check status and problem.
 
-exports.deleteImage = async function (req) {//200
+exports.deleteImage = async function (req) {
     console.log('Request to delete User image!');
 
     const token = req.headers["x-authorization"];
     const id = req.params.id;
-    const responseToken = await userHelper.checkToken(token);
+    const findToken = await userHelper.checkToken(token);
 
-
-    if (responseToken) {
+    if (findToken) {
         if (!await userHelper.checkId(id)) return 404;
-        if (responseToken.id === parseInt(id)) {
-            if (!responseToken.image_filename) return 404;
-            fs.unlinkSync('storage/photos/' + responseToken.image_filename, function (err) {
+        if (findToken.id === parseInt(id)) {
+            if (!findToken.image_filename) return 404;
+            fs.unlinkSync('storage/photos/' + findToken.image_filename, function (err) {
                 if (err) throw err;
             });
             await userHelper.deleteImage(id);
             return 200;
         } else {
-
             return 403;
         }
-
-
     }
     return 401;
-
-}
-
-
-
-
+} // ok check delete a user's profile image.

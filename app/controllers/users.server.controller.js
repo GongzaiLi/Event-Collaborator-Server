@@ -73,7 +73,7 @@ exports.getUser = async function (req, res) {
 
     }
 
-} //ok
+} //ok 200 404 500
 
 exports.updateUser = async function (req, res) {
     console.log("Change a user's details.");

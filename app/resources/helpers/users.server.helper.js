@@ -24,6 +24,13 @@ exports.checkEmail = async function (email) {
     return rows;
 }
 
+exports.checkUpdateEmail = async function (email, id) {
+    const conn = await db.getPool().getConnection(); //CONNECTING
+    const [[rows]] = await conn.query("select * from user where email = (?) and id != (?)", [email, id]);
+    conn.release();
+    return rows;
+}
+
 exports.checkToken = async function (auth_token) {
     const conn = await db.getPool().getConnection(); //CONNECTING
     const [[rows]] = await conn.query("select * from user where auth_token = (?)", [auth_token]);
