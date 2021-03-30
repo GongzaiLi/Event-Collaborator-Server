@@ -68,6 +68,8 @@ exports.getEvent = async function (q, categoryIds, organizerId, sortBy) {
             case 'CAPACITY_DESC' :
                 sql.sort = " order by table2.capacity desc";
                 break;
+            default:
+                return false;
         }
     }
     const conn = await db.getPool().getConnection(); //CONNECTING

@@ -12,6 +12,7 @@ exports.readEvents = async function (req) {
         if (!await eventHelper.validGetCategoryIds(query)) return false;
 
         const rows = await eventHelper.getEvent(query.q, query.categoryIds, query.organizerId, query.sortBy);
+        if (!rows) return false;
         const result = eventHelper.modifyResult(rows);
         return eventHelper.filterEvents(result, query.startIndex, query.count); //some time has problem
     } else {
