@@ -199,6 +199,9 @@ exports.validQueryParameters = function (query) {
 
     if ('categoryIds' in query) {
         if (Array.isArray(query.categoryIds)) {
+
+            if (new Set(query.categoryIds).size !== query.categoryIds.length) return false;// check  one or more invalid category IDs
+
             for (const categoryId of query.categoryIds) {
                 if (!(Number.isInteger(parseInt(categoryId)) && categoryId.length)) {
                     return false;

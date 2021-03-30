@@ -80,6 +80,7 @@ exports.updateUser = async function (req) {
     const id = req.params.id;
     let userInfo = req.body;
 
+
     let update = {
         email: false,
         password: false,
@@ -92,7 +93,7 @@ exports.updateUser = async function (req) {
     if (loginUser) {
         if (await userHelper.checkId(id)) {
             if (loginUser.id === parseInt(id)) {
-                if (Object.keys(userInfo).length) {
+                if (typeof userInfo === 'object' && Object.keys(userInfo).length) {
 
                     if ('email' in userInfo) {
                         if (userHelper.validateEmailSchema(userInfo)) {

@@ -85,7 +85,7 @@ exports.createEvent = async function (req) {
     await eventHelper.insertEventCategory(insertData.categoryIds, response.insertId);
 
     return response;
-} // need testing a date (yyyy-MM-dd) or date and time (yyyy-MM-dd hh:mm:ss.sss)
+} // ok need testing a date (yyyy-MM-dd) or date and time (yyyy-MM-dd hh:mm:ss.sss)
 
 exports.getOneEvent = async function (req) {
     console.log('Request to get a Event from the database...');
@@ -134,19 +134,19 @@ exports.getOneEvent = async function (req) {
 
 
     return result;
-} // need check
+} // ok
 
 exports.updateEvent = async function (req) {
     const token = req.headers["x-authorization"];
     const eventId = req.params.id;
     const eventBody = req.body;
+    if (typeof eventBody !== 'object' || Object.keys(eventBody).length === 0) return 400;
 
     const findToken = await userHelper.checkToken(token);
     if (!findToken) return 401;// id for organizer_id
     const findEventId = await eventHelper.checkEventId(eventId);
 
-
-    if (!findEventId || !eventBody) return 404;
+    if (!findEventId) return 404;
     if (findToken.id !== findEventId.organizer_id || !eventHelper.compareDate(findEventId.date)) return 403; // Data
 
     let checkUpdate = {
@@ -243,7 +243,7 @@ exports.updateEvent = async function (req) {
     if (checkUpdate.requiresAttendanceControl) await eventHelper.updateRequiresAttendanceControl(eventBody.requiresAttendanceControl, eventId);
     if (checkUpdate.fee) await eventHelper.updateFee(eventBody.fee, eventId);
     return 200;
-} // need check
+} // ok
 
 exports.deleteEvent = async function (req) {
     const token = req.headers["x-authorization"];
@@ -261,8 +261,8 @@ exports.deleteEvent = async function (req) {
     await eventHelper.deleteEventIdInEventCategory(eventId);
     await eventHelper.deleteEventIdInEvent(eventId);
     return 200;
-}//need check...................................
+}//ok
 
 exports.getAllCategories = async function () {
     return await eventHelper.getAllCategories();
-}
+}//ok

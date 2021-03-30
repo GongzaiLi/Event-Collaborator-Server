@@ -12,7 +12,7 @@ exports.getAttendees = async function (req) {
     if (!await eventAttendHelper.checkEventIdInEventAttendees(eventId) || !findEvent) return null;
     if (findToken) userId = findToken.id;
     return await eventAttendHelper.getEventAttendee(eventId, userId);
-}// need check
+}// ok
 
 exports.createAttendees = async function (req) {
     const token = req.headers["x-authorization"];//201 403
@@ -34,7 +34,7 @@ exports.createAttendees = async function (req) {
 
     return 201;
 
-}// need check
+}// ok
 
 exports.deleteAttendees = async function (req) {
     //200 404
@@ -54,7 +54,7 @@ exports.deleteAttendees = async function (req) {
     }
     await eventAttendHelper.deleteEventIdAndUserIdInEventAttendee(eventId, findToken.id);
     return 200;
-}// need check
+}// ok
 
 exports.changeStatus = async function (req) {
     //200 404
@@ -72,4 +72,4 @@ exports.changeStatus = async function (req) {
     if (!eventAttendHelper.validStatus(statusBody.status) || !statusBody.status in statusList) return 400;
     await eventAttendHelper.updateStatus(eventId, userId, statusList[statusBody.status]);
     return 200;
-}
+}//ok
