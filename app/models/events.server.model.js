@@ -43,7 +43,7 @@ exports.createEvent = async function (req) {
     if (!responseToken) return 401;
     insertData.organizer_id = responseToken.id;
 
-    if (!(eventHelper.validTitle(requestBody) && eventHelper.validDescription(requestBody) &&
+    if (!(await eventHelper.validTitle(requestBody) && eventHelper.validDescription(requestBody) &&
         await eventHelper.validPostCategoryIds(requestBody) && eventHelper.validData(requestBody))) return 400;
     insertData.title = requestBody.title;
     insertData.description = requestBody.description;

@@ -234,9 +234,10 @@ exports.validQueryParameters = function (query) {
     return newQuery;
 }
 
-exports.validTitle = function (eventBody) {
+exports.validTitle = async function (eventBody) {
     if ("title" in eventBody) {
-        if (typeof eventBody.title === 'string' && eventBody.title.length) {
+        console.log(await this.checkTitle(eventBody.title));
+        if (typeof eventBody.title === 'string' && eventBody.title.length  && ! await this.checkTitle(eventBody.title)) {
             return true;
         }
     }
